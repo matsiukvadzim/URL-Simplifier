@@ -79,7 +79,7 @@
 				<configuration>
 					<appName>urlsimplifier</appName>
 					<processTypes>
-						<web>java $JAVA_OPTS -cp target/classes:target/dependency/* UrlSimplifierApplication</web>
+						<web>java $JAVA_OPTS -cp target/classes:target/dependency/* simplifier.UrlSimplifierApplication</web>
 					</processTypes>
 				</configuration>
 			</plugin>
