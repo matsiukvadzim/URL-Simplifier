@@ -78,6 +78,9 @@
 				<version>2.0.3</version>
 				<configuration>
 					<appName>urlsimplifier</appName>
+					<processTypes>
+						<web>java $JAVA_OPTS -cp target/classes:target/dependency/* Main</web>
+					</processTypes>
 				</configuration>
 			</plugin>
 
