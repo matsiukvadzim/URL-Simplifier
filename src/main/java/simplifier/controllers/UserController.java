@@ -1,6 +1,8 @@
 package simplifier.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +22,10 @@ public class UserController {
   }
 
   @PostMapping
-  public User createUser(@RequestBody User user) {
-    return userService.saveUser(user);
+  public ResponseEntity<?> createUser(@RequestBody User user) {
+
+    userService.saveUser(user);
+
+    return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 }
