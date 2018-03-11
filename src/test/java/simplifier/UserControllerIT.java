@@ -2,6 +2,7 @@ package simplifier;
 
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
@@ -34,7 +35,7 @@ public class UserControllerIT {
    ResponseEntity<User> responseEntity = restTemplate.postForEntity("/user",
        user, User.class);
 
-   assertThat(HttpStatus.CREATED, is(responseEntity.getStatusCode()));
-   assertThat(false, is(responseEntity.hasBody()));
+   assertThat(responseEntity.getStatusCode(), is(HttpStatus.CREATED));
+   assertThat(responseEntity.getBody(), is(nullValue()));
   }
 }
