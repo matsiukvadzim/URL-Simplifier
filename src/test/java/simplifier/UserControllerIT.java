@@ -3,7 +3,6 @@ package simplifier;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,6 +35,6 @@ public class UserControllerIT {
        user, User.class);
 
    assertThat(HttpStatus.CREATED, is(responseEntity.getStatusCode()));
-   assertTrue(!responseEntity.hasBody());
+   assertThat(false, is(responseEntity.hasBody()));
   }
 }
