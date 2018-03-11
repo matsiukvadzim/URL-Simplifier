@@ -6,6 +6,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 @Entity
 @Table(name = "users")
@@ -52,5 +54,26 @@ public class User {
 
   public void setEncryptedPassword(String encryptedPassword) {
     this.encryptedPassword = encryptedPassword;
+  }
+
+  @Override
+  public int hashCode() {
+    HashCodeBuilder hcb = new HashCodeBuilder();
+    hcb.append(username);
+    return hcb.toHashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (!(obj instanceof User)) {
+      return false;
+    }
+    User that = (User) obj;
+    EqualsBuilder eb = new EqualsBuilder();
+    eb.append(username, that.getUsername());
+    return eb.isEquals();
   }
 }
