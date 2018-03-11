@@ -1,7 +1,9 @@
 package simplifier;
 
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +35,7 @@ public class UserControllerIT {
    ResponseEntity<User> responseEntity = restTemplate.postForEntity("/user",
        user, User.class);
 
-   assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
-
+   assertThat(HttpStatus.CREATED, is(responseEntity.getStatusCode()));
+   assertTrue(!responseEntity.hasBody());
   }
 }
