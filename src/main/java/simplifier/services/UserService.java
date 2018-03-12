@@ -1,9 +1,9 @@
 package simplifier.services;
 
-import simplifier.exceptions.NameNotUniqueException;
+import java.util.Optional;
 import simplifier.model.User;
 
 public interface UserService {
 
-  User saveUser(User user) throws NameNotUniqueException;
+ Optional<User> saveUser(User user);
 }
