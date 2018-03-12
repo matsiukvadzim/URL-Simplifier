@@ -46,7 +46,7 @@ public class UserControllerIT {
 
    User savedUser = userRepository.findByUsername("test");
 
-   assertThat(savedUser, is(equalTo(user)));
+   assertThat(savedUser, is(user));
    assertThat(responseEntity.getStatusCode(), is(HttpStatus.CREATED));
    assertThat(responseEntity.getBody(), is(nullValue()));
   }

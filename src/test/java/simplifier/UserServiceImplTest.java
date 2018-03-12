@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import simplifier.exceptions.NameNotUniqueException;
 import simplifier.model.User;
 import simplifier.repositories.UserRepository;
 import simplifier.services.UserServiceImpl;
@@ -35,9 +36,14 @@ public class UserServiceImplTest {
 
     when(userRepository.save(user)).thenReturn(user);
 
-    User savedUser = userService.saveUser(user);
+    User savedUser = null;
+    try {
+      savedUser = userService.saveUser(user);
+    } catch (NameNotUniqueException e) {
+      e.printStackTrace();
+    }
 
-    assertThat(savedUser, is(equalTo(user)));
+    assertThat(savedUser, is(user));
 
     verify(userRepository).save(user);
   }

@@ -3,6 +3,7 @@ package simplifier.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import simplifier.exceptions.NameNotUniqueException;
 import simplifier.model.User;
 import simplifier.repositories.UserRepository;
 
@@ -25,7 +26,11 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User saveUser(User user) {
+  public User saveUser(User user) throws NameNotUniqueException{
+    User checkForUnique = userRepository.findByUsername(user.getUsername());
+    if (checkForUnique != null) {
+      throw new NameNotUniqueException();
+    }
     user.setEncryptedPassword(bCryptPasswordEncoder.encode(user.getPassword()));
     return userRepository.save(user);
   }
