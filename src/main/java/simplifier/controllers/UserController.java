@@ -14,18 +14,17 @@ import simplifier.services.UserService;
 @RequestMapping("/user")
 public class UserController {
 
-  private UserService userService;
+    private UserService userService;
 
-  @Autowired
-  public void setUserService(UserService userService) {
-    this.userService = userService;
-  }
-
-  @PostMapping
-  public ResponseEntity<?> createUser(@RequestBody User user) {
-    if (userService.saveUser(user).isPresent()) {
-      return ResponseEntity.status(HttpStatus.CREATED).build();
+    @Autowired
+    public void setUserService(UserService userService) {
+        this.userService = userService;
     }
-    return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
-  }
+
+    @PostMapping
+    public ResponseEntity<?> createUser(@RequestBody User user) {
+        return userService.saveUser(user)
+                .map(savedUser -> ResponseEntity.status(HttpStatus.CREATED).build())
+                .orElse(ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists"));
+    }
 }

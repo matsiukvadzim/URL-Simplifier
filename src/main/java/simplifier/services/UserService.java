@@ -1,9 +1,10 @@
 package simplifier.services;
 
-import java.util.Optional;
 import simplifier.model.User;
+
+import java.util.Optional;
 
 public interface UserService {
 
- Optional<User> saveUser(User user);
+    Optional<User> saveUser(User user);
 }
