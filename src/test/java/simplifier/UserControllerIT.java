@@ -13,6 +13,7 @@ import simplifier.model.User;
 import simplifier.repositories.UserRepository;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
@@ -37,13 +38,13 @@ public class UserControllerIT {
     @Test
     public void createUser() {
         User user = new User();
-        user.setUsername("test");
-        user.setPassword("test");
+        user.setUsername("username");
+        user.setPassword("password");
 
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/user",
                 user, User.class);
 
-        User savedUser = userRepository.findByUsername("test");
+        User savedUser = userRepository.findByUsername("username");
 
         assertThat(savedUser, is(user));
         assertThat(responseEntity.getStatusCode(), is(HttpStatus.CREATED));
@@ -52,19 +53,21 @@ public class UserControllerIT {
 
     @Test
     public void conflictIfUsernameNotUnique() {
-        User firstUser = new User();
-        firstUser.setUsername("test");
-        firstUser.setPassword("test");
+        User existingUser  = new User();
+        existingUser.setUsername("test");
+        existingUser.setPassword("test");
 
-        userRepository.save(firstUser);
+        userRepository.save(existingUser);
 
-        User secondUser = new User();
-        secondUser.setUsername("test");
-        secondUser.setPassword("test");
+        User invalidUser = new User();
+        invalidUser.setUsername("test");
+        invalidUser.setPassword("test");
 
         ResponseEntity<String> responseEntity = restTemplate.postForEntity("/user",
-                secondUser, String.class);
+                invalidUser, String.class);
 
         assertThat(responseEntity.getStatusCode(), is(HttpStatus.CONFLICT));
+        assertThat(responseEntity.getBody(), is(notNullValue()));
+        assertThat(userRepository.findByUsername("test"), is(existingUser));
     }
 }

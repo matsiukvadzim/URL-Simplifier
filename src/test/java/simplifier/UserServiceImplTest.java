@@ -14,6 +14,7 @@ import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -40,24 +41,26 @@ public class UserServiceImplTest {
         assertThat(savedUser, is(Optional.of(user)));
 
         verify(userRepository).save(user);
+        verify(bCryptPasswordEncoder).encode(user.getPassword());
     }
 
     @Test
     public void doNotSaveIfUsernameDuplicate() {
-        User firstUser = new User();
-        firstUser.setUsername("test");
-        firstUser.setPassword("test");
+        User existingUser  = new User();
+        existingUser.setUsername("test");
+        existingUser.setPassword("test");
 
-        User secondUser = new User();
-        secondUser.setUsername("test");
-        secondUser.setPassword("test");
+        User invalidUser = new User();
+        invalidUser.setUsername("test");
+        invalidUser.setPassword("test");
 
-        when(userRepository.findByUsername(secondUser.getUsername())).thenReturn(firstUser);
+        when(userRepository.findByUsername(invalidUser.getUsername())).thenReturn(existingUser);
 
-        Optional<User> savedUser = userService.saveUser(secondUser);
+        Optional<User> savedUser = userService.saveUser(invalidUser);
 
         assertThat(savedUser, is(Optional.empty()));
 
-        verify(userRepository).findByUsername(secondUser.getUsername());
+        verify(userRepository).findByUsername(invalidUser.getUsername());
+        verify(bCryptPasswordEncoder, never()).encode(invalidUser.getPassword());
     }
 }
