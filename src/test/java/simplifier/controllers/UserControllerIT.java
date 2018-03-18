@@ -1,4 +1,4 @@
-package simplifier;
+package simplifier.controllers;
 
 
 import org.junit.Test;
@@ -11,6 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import simplifier.model.User;
 import simplifier.repositories.UserRepository;
+import simplifier.services.UserServiceImpl;
+
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -25,6 +28,8 @@ public class UserControllerIT {
 
     private UserRepository userRepository;
 
+    private UserServiceImpl userService;
+
     @Autowired
     public void setUserRepository(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -33,6 +38,11 @@ public class UserControllerIT {
     @Autowired
     public void setRestTemplate(TestRestTemplate restTemplate) {
         this.restTemplate = restTemplate;
+    }
+
+    @Autowired
+    public void setUserService(UserServiceImpl userService) {
+        this.userService = userService;
     }
 
     @Test
@@ -46,7 +56,7 @@ public class UserControllerIT {
 
         User savedUser = userRepository.findByUsername("username");
 
-        assertThat(savedUser, is(user));
+        assertThat(savedUser, is(notNullValue()));
         assertThat(responseEntity.getStatusCode(), is(HttpStatus.CREATED));
         assertThat(responseEntity.getBody(), is(nullValue()));
     }
@@ -57,7 +67,7 @@ public class UserControllerIT {
         existingUser.setUsername("test");
         existingUser.setPassword("test");
 
-        userRepository.save(existingUser);
+        Optional<User> savedUser = userService.saveUser(existingUser);
 
         User invalidUser = new User();
         invalidUser.setUsername("test");
@@ -66,8 +76,11 @@ public class UserControllerIT {
         ResponseEntity<String> responseEntity = restTemplate.postForEntity("/user",
                 invalidUser, String.class);
 
+        String requiredMessage = "Username already exists";
+
         assertThat(responseEntity.getStatusCode(), is(HttpStatus.CONFLICT));
         assertThat(responseEntity.getBody(), is(notNullValue()));
-        assertThat(userRepository.findByUsername("test"), is(existingUser));
+        assertThat(responseEntity.getBody(), is(requiredMessage));
+        assertThat(userRepository.findByUsername("test"), is(savedUser.get()));
     }
 }

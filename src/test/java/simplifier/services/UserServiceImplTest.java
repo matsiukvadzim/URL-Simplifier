@@ -1,4 +1,4 @@
-package simplifier;
+package simplifier.services;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,9 +14,7 @@ import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserServiceImplTest {
@@ -35,13 +33,16 @@ public class UserServiceImplTest {
         User user = new User();
 
         when(userRepository.save(user)).thenReturn(user);
+        when(userRepository.findByUsername(user.getUsername())).thenReturn(null);
 
         Optional<User> savedUser = userService.saveUser(user);
 
         assertThat(savedUser, is(Optional.of(user)));
 
+        verify(userRepository).findByUsername(user.getUsername());
         verify(userRepository).save(user);
         verify(bCryptPasswordEncoder).encode(user.getPassword());
+        verifyNoMoreInteractions(userRepository, bCryptPasswordEncoder);
     }
 
     @Test
@@ -62,5 +63,6 @@ public class UserServiceImplTest {
 
         verify(userRepository).findByUsername(invalidUser.getUsername());
         verify(bCryptPasswordEncoder, never()).encode(invalidUser.getPassword());
+        verifyNoMoreInteractions(userRepository, bCryptPasswordEncoder);
     }
 }

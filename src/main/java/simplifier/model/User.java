@@ -56,6 +56,8 @@ public class User {
     public int hashCode() {
         HashCodeBuilder hcb = new HashCodeBuilder();
         hcb.append(username);
+        hcb.append(id);
+        hcb.append(encryptedPassword);
         return hcb.toHashCode();
     }
 
@@ -70,6 +72,8 @@ public class User {
         User that = (User) obj;
         EqualsBuilder eb = new EqualsBuilder();
         eb.append(username, that.getUsername());
+        eb.append(id, that.getId());
+        eb.append(encryptedPassword, that.getEncryptedPassword());
         return eb.isEquals();
     }
 }
