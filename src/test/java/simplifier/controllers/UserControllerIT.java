@@ -8,27 +8,29 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import simplifier.model.User;
 import simplifier.repositories.UserRepository;
-import simplifier.services.UserServiceImpl;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class UserControllerIT {
 
     private TestRestTemplate restTemplate = new TestRestTemplate();
 
     private UserRepository userRepository;
 
-    private UserServiceImpl userService;
+    private BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
     public void setUserRepository(UserRepository userRepository) {
@@ -41,8 +43,8 @@ public class UserControllerIT {
     }
 
     @Autowired
-    public void setUserService(UserServiceImpl userService) {
-        this.userService = userService;
+    public void setPasswordEncoder(BCryptPasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Test
@@ -54,11 +56,19 @@ public class UserControllerIT {
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/user",
                 user, User.class);
 
-        User savedUser = userRepository.findByUsername("username");
+        List<User> users = new ArrayList<>();
+        userRepository.findAll().forEach(users::add);
 
-        assertThat(savedUser, is(notNullValue()));
+        assertThat(users.size(), is(1));
+
+        User savedUser = users.get(0);
+
+        boolean passwordsMatch = passwordEncoder.matches(user.getPassword(), savedUser.getEncryptedPassword());
+
+        assertThat(passwordsMatch, is(true));
         assertThat(responseEntity.getStatusCode(), is(HttpStatus.CREATED));
         assertThat(responseEntity.getBody(), is(nullValue()));
+
     }
 
     @Test
@@ -67,7 +77,7 @@ public class UserControllerIT {
         existingUser.setUsername("test");
         existingUser.setPassword("test");
 
-        Optional<User> savedUser = userService.saveUser(existingUser);
+        User savedUser = userRepository.save(existingUser);
 
         User invalidUser = new User();
         invalidUser.setUsername("test");
@@ -76,11 +86,16 @@ public class UserControllerIT {
         ResponseEntity<String> responseEntity = restTemplate.postForEntity("/user",
                 invalidUser, String.class);
 
+        List<User> users = new ArrayList<>();
+        userRepository.findAll().forEach(users::add);
+
+        assertThat(users.size(), is(1));
+
+        assertThat(userRepository.findByUsername(existingUser.getUsername()), is(savedUser));
+
         String requiredMessage = "Username already exists";
 
         assertThat(responseEntity.getStatusCode(), is(HttpStatus.CONFLICT));
-        assertThat(responseEntity.getBody(), is(notNullValue()));
         assertThat(responseEntity.getBody(), is(requiredMessage));
-        assertThat(userRepository.findByUsername("test"), is(savedUser.get()));
     }
 }
