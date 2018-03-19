@@ -4,6 +4,8 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -19,6 +21,9 @@ public class User {
     private String password;
 
     private String encryptedPassword;
+
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "author")
+    private List<Link> links = new ArrayList<>();
 
     public Integer getId() {
         return id;
@@ -50,6 +55,14 @@ public class User {
 
     public void setEncryptedPassword(String encryptedPassword) {
         this.encryptedPassword = encryptedPassword;
+    }
+
+    public List<Link> getLinks() {
+        return links;
+    }
+
+    public void addLink(Link link) {
+        links.add(link);
     }
 
     @Override
