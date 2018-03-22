@@ -3,6 +3,7 @@ package simplifier.model;
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "links")
@@ -30,7 +31,7 @@ public class Link {
             inverseJoinColumns = {@JoinColumn(name = "user_id")})
     private User author;
 
-    private Integer clicks;
+    private Integer clicks = 0;
 
     public Integer getId() {
         return id;
@@ -68,8 +69,14 @@ public class Link {
         return tags;
     }
 
-    public void addTag(Tag tag) {
-        this.tags.add(tag);
+    public List<String> getTagsAsStrings() {
+        return tags.stream()
+                .map(tag -> tag.getName())
+                .collect(Collectors.toList());
+    }
+
+    public void setTags(List<Tag> tags) {
+        this.tags = tags;
     }
 
     public User getAuthor() {
