@@ -20,8 +20,8 @@ public class LinkController {
 
     @PostMapping
     public ResponseEntity<?> createLink(@RequestBody Link link) {
-        linkService.saveLink(link);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        Link savedLink = linkService.saveLink(link);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedLink);
     }
 
     @GetMapping

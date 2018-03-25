@@ -1,7 +1,6 @@
 package simplifier.model;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,7 +22,7 @@ public class Link {
     @JoinTable(name = "link_tags",
             joinColumns = {@JoinColumn(name = "link_id")},
             inverseJoinColumns = {@JoinColumn(name = "tag_id")})
-    private List<Tag> tags = new ArrayList<>();
+    private List<Tag> tags;
 
     @ManyToOne
     @JoinTable(name = "link_users",

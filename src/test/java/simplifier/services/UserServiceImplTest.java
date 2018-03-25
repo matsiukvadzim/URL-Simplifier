@@ -8,7 +8,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import simplifier.model.User;
 import simplifier.repositories.UserRepository;
-import simplifier.services.UserServiceImpl;
 
 import java.util.Optional;
 
@@ -47,7 +46,7 @@ public class UserServiceImplTest {
 
     @Test
     public void doNotSaveIfUsernameDuplicate() {
-        User existingUser  = new User();
+        User existingUser = new User();
         existingUser.setUsername("test");
         existingUser.setPassword("test");
 

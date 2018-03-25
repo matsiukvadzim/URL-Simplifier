@@ -1,6 +1,7 @@
 package simplifier.controllers;
 
 
+import com.google.common.collect.Lists;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import simplifier.model.User;
 import simplifier.repositories.UserRepository;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
@@ -26,7 +26,7 @@ import static org.junit.Assert.assertThat;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class UserControllerIT {
 
-    private TestRestTemplate restTemplate = new TestRestTemplate();
+    private TestRestTemplate restTemplate;
 
     private UserRepository userRepository;
 
@@ -56,8 +56,7 @@ public class UserControllerIT {
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/user",
                 user, User.class);
 
-        List<User> users = new ArrayList<>();
-        userRepository.findAll().forEach(users::add);
+        List<User> users = Lists.newArrayList(userRepository.findAll());
 
         assertThat(users.size(), is(1));
 
@@ -73,7 +72,7 @@ public class UserControllerIT {
 
     @Test
     public void conflictIfUsernameNotUnique() {
-        User existingUser  = new User();
+        User existingUser = new User();
         existingUser.setUsername("test");
         existingUser.setPassword("test");
 
@@ -86,8 +85,7 @@ public class UserControllerIT {
         ResponseEntity<String> responseEntity = restTemplate.postForEntity("/user",
                 invalidUser, String.class);
 
-        List<User> users = new ArrayList<>();
-        userRepository.findAll().forEach(users::add);
+        List<User> users = Lists.newArrayList(userRepository.findAll());
 
         assertThat(users.size(), is(1));
 
