@@ -8,5 +8,5 @@ public interface UserService {
 
     Optional<User> saveUser(User user);
 
-    User findByUsername(String username);
+    Optional<User> findByUsername(String username);
 }

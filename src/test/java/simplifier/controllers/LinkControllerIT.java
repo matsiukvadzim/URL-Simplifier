@@ -1,10 +1,7 @@
 package simplifier.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +12,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import simplifier.model.Link;
-import simplifier.model.Tag;
 import simplifier.model.User;
+import simplifier.model.dto.LinkCreationDto;
+import simplifier.model.dto.LinkGetterDto;
 import simplifier.repositories.LinkRepository;
 import simplifier.repositories.UserRepository;
 
-import java.util.ArrayList;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -38,7 +37,6 @@ public class LinkControllerIT {
 
     private TestRestTemplate restTemplate;
 
-    private Link link = new Link();
 
     @Autowired
     public void setLinkRepository(LinkRepository linkRepository) {
@@ -55,50 +53,22 @@ public class LinkControllerIT {
         this.restTemplate = restTemplate;
     }
 
-    @Before
-    public void setUp() throws Exception {
-        link.setOriginalLink("original link");
-        link.setDescription("description");
-        List<Tag> tags = new ArrayList<>();
-        Tag tag1 = new Tag();
-        Tag tag2 = new Tag();
-        tag1.setName("tag1");
-        tag2.setName("tag2");
-        tags.add(tag1);
-        tags.add(tag2);
-        link.setTags(tags);
-        User author = new User();
-        author.setUsername("author");
-        link.setAuthor(author);
-        userRepository.save(author);
-    }
-
-    private ObjectNode initJsonObj(Link link) {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode linkNode = mapper.createObjectNode();
-        linkNode.put("originalLink", link.getOriginalLink());
-        linkNode.put("shortenedLink", link.getShortenedLink());
-        linkNode.put("description", link.getDescription());
-        ArrayNode tagNode = mapper.createArrayNode();
-        List<Tag> tags = link.getTags();
-        for (Tag tag : tags) {
-            tagNode.add(tag.getName());
-        }
-        linkNode.set("tags", tagNode);
-        linkNode.put("author", link.getAuthor().getUsername());
-
-        return linkNode;
-    }
-
     @Test
-    public void createWithGeneratedShortened() {
+    public void createWithGeneratedShortened() throws IOException {
 
-        ObjectNode linkNode = initJsonObj(link);
+        User user = new User();
+        user.setUsername("author");
+        userRepository.save(user);
 
-        ResponseEntity<Link> responseEntity = restTemplate.postForEntity("/link",
-                linkNode, Link.class);
+        ObjectMapper mapper = new ObjectMapper();
 
-        Link savedLink = responseEntity.getBody();
+        LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithoutShortened.JSON"),
+                LinkCreationDto.class);
+
+        ResponseEntity<LinkGetterDto> responseEntity = restTemplate.postForEntity("/link",
+                link, LinkGetterDto.class);
+
+        LinkGetterDto savedLink = responseEntity.getBody();
 
         List<Link> links = Lists.newArrayList(linkRepository.findAll());
 
@@ -108,15 +78,20 @@ public class LinkControllerIT {
     }
 
     @Test
-    public void createWithExistShortened() {
+    public void createWithExistShortened() throws IOException {
 
-        link.setShortenedLink("short");
-        ObjectNode linkNode = initJsonObj(link);
+        User user = new User();
+        user.setUsername("author");
+        userRepository.save(user);
 
-        ResponseEntity<Link> responseEntity = restTemplate.postForEntity("/link",
-                linkNode, Link.class);
+        ObjectMapper mapper = new ObjectMapper();
+        LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithShortened.JSON"),
+                LinkCreationDto.class);
 
-        Link savedLink = responseEntity.getBody();
+        ResponseEntity<LinkGetterDto> responseEntity = restTemplate.postForEntity("/link",
+                link, LinkGetterDto.class);
+
+        LinkGetterDto savedLink = responseEntity.getBody();
 
         List<Link> links = Lists.newArrayList(linkRepository.findAll());
 

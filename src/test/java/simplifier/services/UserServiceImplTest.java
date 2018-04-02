@@ -32,7 +32,7 @@ public class UserServiceImplTest {
         User user = new User();
 
         when(userRepository.save(user)).thenReturn(user);
-        when(userRepository.findByUsername(user.getUsername())).thenReturn(null);
+        when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.empty());
 
         Optional<User> savedUser = userService.saveUser(user);
 
@@ -54,7 +54,7 @@ public class UserServiceImplTest {
         invalidUser.setUsername("test");
         invalidUser.setPassword("test");
 
-        when(userRepository.findByUsername(invalidUser.getUsername())).thenReturn(existingUser);
+        when(userRepository.findByUsername(invalidUser.getUsername())).thenReturn(Optional.of(existingUser));
 
         Optional<User> savedUser = userService.saveUser(invalidUser);
 

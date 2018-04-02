@@ -2,7 +2,6 @@ package simplifier.model;
 
 import javax.persistence.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "links")
@@ -14,6 +13,7 @@ public class Link {
 
     private String originalLink;
 
+    @Column(unique = true)
     private String shortenedLink;
 
     private String description;
@@ -66,12 +66,6 @@ public class Link {
 
     public List<Tag> getTags() {
         return tags;
-    }
-
-    public List<String> getTagsAsStrings() {
-        return tags.stream()
-                .map(tag -> tag.getName())
-                .collect(Collectors.toList());
     }
 
     public void setTags(List<Tag> tags) {

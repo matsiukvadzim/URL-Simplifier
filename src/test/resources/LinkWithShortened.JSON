@@ -1,0 +1,10 @@
+{
+  "originalLink": "link",
+  "shortenedLink": "short",
+  "description": "description",
+  "tags":[
+    "1",
+    "2"
+  ],
+  "author": "author"
+}

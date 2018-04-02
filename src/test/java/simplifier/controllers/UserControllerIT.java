@@ -89,7 +89,7 @@ public class UserControllerIT {
 
         assertThat(users.size(), is(1));
 
-        assertThat(userRepository.findByUsername(existingUser.getUsername()), is(savedUser));
+        assertThat(userRepository.findByUsername(existingUser.getUsername()).get(), is(savedUser));
 
         String requiredMessage = "Username already exists";
 

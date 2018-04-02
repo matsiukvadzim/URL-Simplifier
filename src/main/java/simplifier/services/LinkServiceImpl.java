@@ -7,6 +7,8 @@ import simplifier.model.User;
 import simplifier.repositories.LinkRepository;
 import simplifier.repositories.UserRepository;
 
+import java.util.Optional;
+
 @Service
 public class LinkServiceImpl implements LinkService {
 
@@ -41,13 +43,14 @@ public class LinkServiceImpl implements LinkService {
     @Override
     public Link saveLink(Link link) {
         link.setTags(tagService.saveOrUpdateTags(link));
-        User existingUser = userRepository.findByUsername(link.getAuthor().getUsername());
-        link.setAuthor(existingUser);
-        if (link.getShortenedLink() == null || !checkIsShortenedUnique(link)) {
+        Optional<User> existingUser = userRepository.findByUsername(link.getAuthor().getUsername());
+        link.setAuthor(existingUser.get());
+        if (link.getShortenedLink() == null) {
             linkRepository.save(link);
             link.setShortenedLink(simplifyService.encode(link.getId()));
         }
         return linkRepository.save(link);
+
     }
 
     @Override
@@ -55,12 +58,5 @@ public class LinkServiceImpl implements LinkService {
         return linkRepository.findAll();
     }
 
-    private boolean checkIsShortenedUnique(Link link) {
-        Link existingLink = linkRepository.findByShortenedLink(link.getShortenedLink());
-        if (existingLink == null) {
-            return true;
-        }
-        return false;
-    }
 
 }

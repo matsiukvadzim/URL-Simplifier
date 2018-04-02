@@ -14,6 +14,7 @@ import simplifier.repositories.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -64,9 +65,7 @@ public class LinkServiceImplTest {
         when(linkRepository.save(link)).thenReturn(link);
         when(tagService.saveOrUpdateTags(link)).thenReturn(link.getTags());
         when(userRepository.findByUsername(link.getAuthor().getUsername()))
-                .thenReturn(link.getAuthor());
-        when(linkRepository.findByShortenedLink(link.getShortenedLink()))
-                .thenReturn(null);
+                .thenReturn(Optional.of(link.getAuthor()));
 
         Link savedLink = linkService.saveLink(link);
 
@@ -74,7 +73,6 @@ public class LinkServiceImplTest {
         verify(tagService).saveOrUpdateTags(link);
         verify(userRepository).findByUsername(link.getAuthor().getUsername());
         verify(linkRepository).save(link);
-        verify(linkRepository).findByShortenedLink(link.getShortenedLink());
         verifyNoMoreInteractions(tagService, userRepository, linkRepository);
 
     }
@@ -86,7 +84,7 @@ public class LinkServiceImplTest {
 
         when(tagService.saveOrUpdateTags(link)).thenReturn(link.getTags());
         when(userRepository.findByUsername(link.getAuthor().getUsername()))
-                .thenReturn(link.getAuthor());
+                .thenReturn(Optional.of(link.getAuthor()));
         String generatedLink = "generatedLink";
         when(simplifyService.encode(link.getId())).thenReturn(generatedLink);
 
