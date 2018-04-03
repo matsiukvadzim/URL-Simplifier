@@ -28,7 +28,7 @@ public class TagServiceImplTest {
     @Test
     public void saveNewTag() {
         Link link = new Link();
-        Tag tag1 = new Tag();        ;
+        Tag tag1 = new Tag();
         tag1.setName("tag1");
         List<Tag> tags = new ArrayList<>();
         tags.add(tag1);
@@ -42,7 +42,7 @@ public class TagServiceImplTest {
 
         Tag savedTag = savedTags.get(0);
         assertThat(savedTag, is(tag1));
-        assertThat(savedTag.getLinks().size(),is(1));
+        assertThat(savedTag.getLinks().size(), is(1));
         verify(tagRepository).findByName(tag1.getName());
         verify(tagRepository).save(tag1);
         verify(tagRepository).saveAll(tags);
@@ -52,7 +52,7 @@ public class TagServiceImplTest {
     @Test
     public void updateIfTagAlreadyExist() {
         Link link = new Link();
-        Tag tag1 = new Tag();        ;
+        Tag tag1 = new Tag();
         tag1.setName("tag1");
         List<Tag> tags = new ArrayList<>();
         tags.add(tag1);

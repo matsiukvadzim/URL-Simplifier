@@ -1,9 +1,13 @@
 package simplifier.services;
 
+import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import simplifier.mappers.LinkMapper;
 import simplifier.model.Link;
 import simplifier.model.User;
+import simplifier.model.dto.LinkCreationDto;
+import simplifier.model.dto.LinkGetterDto;
 import simplifier.repositories.LinkRepository;
 import simplifier.repositories.UserRepository;
 
@@ -19,6 +23,8 @@ public class LinkServiceImpl implements LinkService {
     private TagService tagService;
 
     private UserRepository userRepository;
+
+    private LinkMapper linkMapper = Mappers.getMapper(LinkMapper.class);
 
     @Autowired
     public void setLinkRepository(LinkRepository linkRepository) {
@@ -41,7 +47,8 @@ public class LinkServiceImpl implements LinkService {
     }
 
     @Override
-    public Link saveLink(Link link) {
+    public LinkGetterDto saveLink(LinkCreationDto linkCreationDto) {
+        Link link = linkMapper.linkDtoToLink(linkCreationDto);
         link.setTags(tagService.saveOrUpdateTags(link));
         Optional<User> existingUser = userRepository.findByUsername(link.getAuthor().getUsername());
         link.setAuthor(existingUser.get());
@@ -49,13 +56,13 @@ public class LinkServiceImpl implements LinkService {
             linkRepository.save(link);
             link.setShortenedLink(simplifyService.encode(link.getId()));
         }
-        return linkRepository.save(link);
+        return linkMapper.linkToLinkDto(linkRepository.save(link));
 
     }
 
     @Override
-    public Iterable<Link> findAllLinks() {
-        return linkRepository.findAll();
+    public Iterable<LinkGetterDto> findAllLinks() {
+        return linkMapper.linksToLinkDtos(linkRepository.findAll());
     }
 
 

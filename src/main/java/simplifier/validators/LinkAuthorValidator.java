@@ -18,7 +18,6 @@ public class LinkAuthorValidator implements ConstraintValidator<ValidAuthor, Str
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
         return userRepository.findByUsername(value)
-                .map(user -> true)
-                .orElse(false);
+                .isPresent();
     }
 }

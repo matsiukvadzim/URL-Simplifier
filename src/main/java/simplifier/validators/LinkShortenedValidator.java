@@ -17,8 +17,7 @@ public class LinkShortenedValidator implements ConstraintValidator<ValidShortene
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        return linkRepository.findByShortenedLink(value)
-                .map(link -> false)
-                .orElse(true);
+        return !linkRepository.findByShortenedLink(value)
+                .isPresent();
     }
 }

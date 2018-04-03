@@ -37,6 +37,7 @@ public class LinkControllerIT {
 
     private TestRestTemplate restTemplate;
 
+    ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     public void setLinkRepository(LinkRepository linkRepository) {
@@ -60,7 +61,6 @@ public class LinkControllerIT {
         user.setUsername("author");
         userRepository.save(user);
 
-        ObjectMapper mapper = new ObjectMapper();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithoutShortened.JSON"),
                 LinkCreationDto.class);
@@ -84,7 +84,6 @@ public class LinkControllerIT {
         user.setUsername("author");
         userRepository.save(user);
 
-        ObjectMapper mapper = new ObjectMapper();
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithShortened.JSON"),
                 LinkCreationDto.class);
 
@@ -100,6 +99,40 @@ public class LinkControllerIT {
         assertThat(links.size(), is(1));
         assertThat(savedLink.getShortenedLink(), is(requiredMessage));
         assertThat(responseEntity.getStatusCode(), is(HttpStatus.CREATED));
+    }
+
+    @Test
+    public void conflictIfUserNotExist() throws IOException {
+        LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithEmptyUser.JSON"),
+                LinkCreationDto.class);
+
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/link",
+                link, String.class);
+
+        String requiredMessage = "User not found";
+
+        assertThat(responseEntity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
+        assertThat(responseEntity.getBody(), is(requiredMessage));
+
+    }
+
+    @Test
+    public void conflictIfShortenedNotUnique() throws Exception {
+        User user = new User();
+        user.setUsername("author");
+        userRepository.save(user);
+
+        LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithShortened.JSON"),
+                LinkCreationDto.class);
+        restTemplate.postForEntity("/link", link, LinkGetterDto.class);
+
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/link",
+                link, String.class);
+
+        String requiredMessage = "Invalid shortened";
+
+        assertThat(responseEntity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
+        assertThat(responseEntity.getBody(), is(requiredMessage));
     }
 }
 

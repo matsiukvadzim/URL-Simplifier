@@ -1,10 +1,11 @@
 package simplifier.services;
 
-import simplifier.model.Link;
+import simplifier.model.dto.LinkCreationDto;
+import simplifier.model.dto.LinkGetterDto;
 
 public interface LinkService {
 
-    Link saveLink(Link link);
+    LinkGetterDto saveLink(LinkCreationDto link);
 
-    Iterable<Link> findAllLinks();
+    Iterable<LinkGetterDto> findAllLinks();
 }
