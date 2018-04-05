@@ -8,7 +8,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import simplifier.model.User;
 import simplifier.repositories.UserRepository;
-import simplifier.services.UserServiceImpl;
 
 import java.util.Optional;
 
@@ -33,7 +32,7 @@ public class UserServiceImplTest {
         User user = new User();
 
         when(userRepository.save(user)).thenReturn(user);
-        when(userRepository.findByUsername(user.getUsername())).thenReturn(null);
+        when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.empty());
 
         Optional<User> savedUser = userService.saveUser(user);
 
@@ -47,7 +46,7 @@ public class UserServiceImplTest {
 
     @Test
     public void doNotSaveIfUsernameDuplicate() {
-        User existingUser  = new User();
+        User existingUser = new User();
         existingUser.setUsername("test");
         existingUser.setPassword("test");
 
@@ -55,7 +54,7 @@ public class UserServiceImplTest {
         invalidUser.setUsername("test");
         invalidUser.setPassword("test");
 
-        when(userRepository.findByUsername(invalidUser.getUsername())).thenReturn(existingUser);
+        when(userRepository.findByUsername(invalidUser.getUsername())).thenReturn(Optional.of(existingUser));
 
         Optional<User> savedUser = userService.saveUser(invalidUser);
 
