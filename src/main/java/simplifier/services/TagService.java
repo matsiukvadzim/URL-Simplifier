@@ -7,5 +7,7 @@ import java.util.List;
 
 public interface TagService {
 
-    List<Tag> saveOrUpdateTags(Link link);
+    List<Tag> saveTags(List<Tag> tags);
+
+    void addLinkToTags(Link link);
 }

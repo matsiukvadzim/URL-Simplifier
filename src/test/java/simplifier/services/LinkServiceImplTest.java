@@ -52,7 +52,7 @@ public class LinkServiceImplTest {
     private LinkGetterDto getterDto = new LinkGetterDto();
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         link.setOriginalLink("original link");
         link.setDescription("description");
         List<Tag> tags = new ArrayList<>();
@@ -89,7 +89,7 @@ public class LinkServiceImplTest {
         getterDto.setShortenedLink(link.getShortenedLink());
 
         when(linkRepository.save(link)).thenReturn(link);
-        when(tagService.saveOrUpdateTags(link)).thenReturn(link.getTags());
+        when(tagService.saveTags(link.getTags())).thenReturn(link.getTags());
         when(userRepository.findByUsername(link.getAuthor().getUsername()))
                 .thenReturn(Optional.of(link.getAuthor()));
         when(linkMapper.linkDtoToLink(creationDto)).thenReturn(link);
@@ -98,11 +98,12 @@ public class LinkServiceImplTest {
         LinkGetterDto savedLink = linkService.saveLink(creationDto);
 
         assertThat(savedLink.getShortenedLink(), is(link.getShortenedLink()));
-        verify(tagService).saveOrUpdateTags(link);
+        verify(tagService).saveTags(link.getTags());
         verify(userRepository).findByUsername(link.getAuthor().getUsername());
         verify(linkRepository).save(link);
         verify(linkMapper).linkDtoToLink(creationDto);
         verify(linkMapper).linkToLinkDto(link);
+        verify(tagService).addLinkToTags(link);
         verifyNoMoreInteractions(tagService, userRepository, linkRepository, linkMapper);
 
     }
@@ -111,7 +112,7 @@ public class LinkServiceImplTest {
     public void saveWithGeneratedShortened() {
 
         when(linkRepository.save(link)).thenReturn(link);
-        when(tagService.saveOrUpdateTags(link)).thenReturn(link.getTags());
+        when(tagService.saveTags(link.getTags())).thenReturn(link.getTags());
         when(userRepository.findByUsername(link.getAuthor().getUsername()))
                 .thenReturn(Optional.of(link.getAuthor()));
         when(linkMapper.linkDtoToLink(creationDto)).thenReturn(link);
@@ -127,12 +128,13 @@ public class LinkServiceImplTest {
         System.out.println();
 
         assertThat(savedLink.getShortenedLink(), is(generatedLink));
-        verify(tagService).saveOrUpdateTags(link);
+        verify(tagService).saveTags(link.getTags());
         verify(userRepository).findByUsername(link.getAuthor().getUsername());
         verify(linkRepository, times(2)).save(link);
         verify(simplifyService).encode(link.getId());
         verify(linkMapper).linkDtoToLink(creationDto);
         verify(linkMapper).linkToLinkDto(link);
+        verify(tagService).addLinkToTags(link);
         verifyNoMoreInteractions(tagService, userRepository, linkRepository,
                 simplifyService, linkMapper);
     }

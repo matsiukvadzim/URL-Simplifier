@@ -49,14 +49,16 @@ public class LinkServiceImpl implements LinkService {
     @Override
     public LinkGetterDto saveLink(LinkCreationDto linkCreationDto) {
         Link link = linkMapper.linkDtoToLink(linkCreationDto);
-        link.setTags(tagService.saveOrUpdateTags(link));
+        link.setTags(tagService.saveTags(link.getTags()));
         Optional<User> existingUser = userRepository.findByUsername(link.getAuthor().getUsername());
         link.setAuthor(existingUser.get());
         if (link.getShortenedLink() == null) {
             linkRepository.save(link);
             link.setShortenedLink(simplifyService.encode(link.getId()));
         }
-        return linkMapper.linkToLinkDto(linkRepository.save(link));
+        Link savedLink = linkRepository.save(link);
+        tagService.addLinkToTags(savedLink);
+        return linkMapper.linkToLinkDto(savedLink);
 
     }
 

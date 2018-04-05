@@ -5,13 +5,13 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import simplifier.model.Link;
 import simplifier.model.Tag;
 import simplifier.repositories.TagRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.*;
@@ -25,49 +25,45 @@ public class TagServiceImplTest {
     @InjectMocks
     private TagServiceImpl tagService;
 
+    private Tag initTag() {
+        Tag tag = new Tag();
+        tag.setName("tag1");
+        return tag;
+    }
     @Test
-    public void saveNewTag() {
-        Link link = new Link();
-        Tag tag1 = new Tag();
-        tag1.setName("tag1");
+    public void saveTag() {
+        Tag tag = initTag();
         List<Tag> tags = new ArrayList<>();
-        tags.add(tag1);
-        link.setTags(tags);
+        tags.add(tag);
 
-        when(tagRepository.findByName(tag1.getName())).thenReturn(null);
-        when(tagRepository.save(tag1)).thenReturn(tag1);
+
+        when(tagRepository.findByNameIn(asList(tag.getName()))).thenReturn(new ArrayList<>());
         when(tagRepository.saveAll(tags)).thenReturn(tags);
 
-        List<Tag> savedTags = tagService.saveOrUpdateTags(link);
+        List<Tag> savedTags = tagService.saveTags(tags);
 
         Tag savedTag = savedTags.get(0);
-        assertThat(savedTag, is(tag1));
-        assertThat(savedTag.getLinks().size(), is(1));
-        verify(tagRepository).findByName(tag1.getName());
-        verify(tagRepository).save(tag1);
+        assertThat(savedTag, is(tag));
+        verify(tagRepository).findByNameIn(asList(tag.getName()));
         verify(tagRepository).saveAll(tags);
         verifyNoMoreInteractions(tagRepository);
     }
 
     @Test
-    public void updateIfTagAlreadyExist() {
-        Link link = new Link();
-        Tag tag1 = new Tag();
-        tag1.setName("tag1");
+    public void saveIfTagAlreadyExist() {
+        Tag tag = initTag();
         List<Tag> tags = new ArrayList<>();
-        tags.add(tag1);
-        link.setTags(tags);
+        tags.add(tag);
 
-        when(tagRepository.findByName(tag1.getName())).thenReturn(tag1);
+        when(tagRepository.findByNameIn(asList(tag.getName()))).thenReturn(tags);
         when(tagRepository.saveAll(tags)).thenReturn(tags);
 
-        List<Tag> savedTags = tagService.saveOrUpdateTags(link);
+        List<Tag> savedTags = tagService.saveTags(tags);
 
         Tag savedTag = savedTags.get(0);
-
-        assertThat(savedTag, is(tag1));
-        assertThat(savedTag.getLinks().size(), is(1));
-        verify(tagRepository).findByName(tag1.getName());
+        assertThat(savedTag, is(tag));
+        assertThat(savedTags.size(), is(1));
+        verify(tagRepository).findByNameIn(asList(tag.getName()));
         verify(tagRepository).saveAll(tags);
         verifyNoMoreInteractions(tagRepository);
 

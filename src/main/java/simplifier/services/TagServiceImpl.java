@@ -9,6 +9,7 @@ import simplifier.repositories.TagRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -22,20 +23,26 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
-    public List<Tag> saveOrUpdateTags(Link link) {
-        List<Tag> tags = new ArrayList<>();
-
-        for (Tag tag : link.getTags()) {
-            Tag currentTag = tagRepository.findByName(tag.getName());
-            if (currentTag != null) {
-                currentTag.addLink(link);
-                tags.add(currentTag);
-            } else {
-                tag.addLink(link);
-                Tag savedTag = tagRepository.save(tag);
-                tags.add(savedTag);
+    public List<Tag> saveTags(List<Tag> tags) {
+        List<String> names = tags.stream()
+                .map(tag -> tag.getName())
+                .collect(Collectors.toList());
+        List<Tag> savedTags = tagRepository.findByNameIn(names);
+        for (Tag tag : tags) {
+            if (!savedTags.contains(tag)) {
+                savedTags.add(tag);
             }
         }
-        return Lists.newArrayList(tagRepository.saveAll(tags));
+        return Lists.newArrayList(tagRepository.saveAll(savedTags));
+    }
+
+    @Override
+    public void addLinkToTags(Link link) {
+        List<Tag> tags = new ArrayList<>();
+        for (Tag tag : link.getTags()) {
+            tag.addLink(link);
+            tags.add(tag);
+        }
+        tagRepository.saveAll(tags);
     }
 }

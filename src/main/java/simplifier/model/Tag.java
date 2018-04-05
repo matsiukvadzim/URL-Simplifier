@@ -1,5 +1,8 @@
 package simplifier.model;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,5 +43,26 @@ public class Tag {
 
     public List<Link> getLinks() {
         return links;
+    }
+
+    @Override
+    public int hashCode() {
+        HashCodeBuilder hcb = new HashCodeBuilder();
+        hcb.append(name);
+        return hcb.toHashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof Tag)) {
+            return false;
+        }
+        Tag that = (Tag) obj;
+        EqualsBuilder eb = new EqualsBuilder();
+        eb.append(name, that.getName());
+        return eb.isEquals();
     }
 }

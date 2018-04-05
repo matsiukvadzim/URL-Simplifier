@@ -84,7 +84,7 @@ public class LinkControllerIT {
         user.setUsername("author");
         userRepository.save(user);
 
-        LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithShortened.JSON"),
+        LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
                 LinkCreationDto.class);
 
         ResponseEntity<LinkGetterDto> responseEntity = restTemplate.postForEntity("/link",
@@ -122,7 +122,7 @@ public class LinkControllerIT {
         user.setUsername("author");
         userRepository.save(user);
 
-        LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithShortened.JSON"),
+        LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
                 LinkCreationDto.class);
         restTemplate.postForEntity("/link", link, LinkGetterDto.class);
 
