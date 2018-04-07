@@ -11,7 +11,7 @@ import simplifier.model.User;
 import simplifier.services.UserService;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/users")
 public class UserController {
 
     private UserService userService;

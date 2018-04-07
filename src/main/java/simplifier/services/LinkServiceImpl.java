@@ -9,7 +9,6 @@ import simplifier.model.User;
 import simplifier.model.dto.LinkCreationDto;
 import simplifier.model.dto.LinkGetterDto;
 import simplifier.repositories.LinkRepository;
-import simplifier.repositories.UserRepository;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -23,7 +22,7 @@ public class LinkServiceImpl implements LinkService {
 
     private TagService tagService;
 
-    private UserRepository userRepository;
+    private UserService userService;
 
     private LinkMapper linkMapper = Mappers.getMapper(LinkMapper.class);
 
@@ -43,15 +42,15 @@ public class LinkServiceImpl implements LinkService {
     }
 
     @Autowired
-    public void setUserRepository(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public void setUserService(UserService userService) {
+        this.userService = userService;
     }
 
     @Override
     public LinkGetterDto saveLink(LinkCreationDto linkCreationDto) {
         Link link = linkMapper.linkDtoToLink(linkCreationDto);
         link.setTags(tagService.saveTags(link.getTags()));
-        Optional<User> existingUser = userRepository.findByUsername(link.getAuthor().getUsername());
+        Optional<User> existingUser = userService.findByUsername(link.getAuthor().getUsername());
         link.setAuthor(existingUser.get());
         if (link.getShortenedLink() == null) {
             linkRepository.save(link);
@@ -59,6 +58,7 @@ public class LinkServiceImpl implements LinkService {
         }
         Link savedLink = linkRepository.save(link);
         tagService.addLinkToTags(savedLink);
+        userService.addLinkToUser(link);
         return linkMapper.linkToLinkDto(savedLink);
 
     }
@@ -69,9 +69,16 @@ public class LinkServiceImpl implements LinkService {
     }
 
     @Override
-    public Iterable<LinkGetterDto> getLinksByTag(String name) {
-       return tagService.findByName(name)
+    public Iterable<LinkGetterDto> getLinksByTag(String tagName) {
+       return tagService.findByName(tagName)
                .map(tag -> linkMapper.linksToLinkDtos(tag.getLinks()))
                .orElse(Collections.emptyList());
+    }
+
+    @Override
+    public Iterable<LinkGetterDto> getLinksByUser(String username) {
+        return userService.findByUsername(username)
+                .map(user -> linkMapper.linksToLinkDtos(user.getLinks()))
+                .orElse(Collections.emptyList());
     }
 }

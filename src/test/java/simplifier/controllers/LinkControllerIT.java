@@ -65,7 +65,7 @@ public class LinkControllerIT {
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithoutShortened.JSON"),
                 LinkCreationDto.class);
 
-        ResponseEntity<LinkGetterDto> responseEntity = restTemplate.postForEntity("/link",
+        ResponseEntity<LinkGetterDto> responseEntity = restTemplate.postForEntity("/links",
                 link, LinkGetterDto.class);
 
         LinkGetterDto savedLink = responseEntity.getBody();
@@ -87,7 +87,7 @@ public class LinkControllerIT {
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
                 LinkCreationDto.class);
 
-        ResponseEntity<LinkGetterDto> responseEntity = restTemplate.postForEntity("/link",
+        ResponseEntity<LinkGetterDto> responseEntity = restTemplate.postForEntity("/links",
                 link, LinkGetterDto.class);
 
         LinkGetterDto savedLink = responseEntity.getBody();
@@ -106,7 +106,7 @@ public class LinkControllerIT {
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithEmptyUser.JSON"),
                 LinkCreationDto.class);
 
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/link",
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/links",
                 link, String.class);
 
         String requiredMessage = "User not found";
@@ -124,9 +124,9 @@ public class LinkControllerIT {
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
                 LinkCreationDto.class);
-        restTemplate.postForEntity("/link", link, LinkGetterDto.class);
+        restTemplate.postForEntity("/links", link, LinkGetterDto.class);
 
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/link",
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/links",
                 link, String.class);
 
         String requiredMessage = "Invalid shortened";
@@ -143,15 +143,32 @@ public class LinkControllerIT {
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
                 LinkCreationDto.class);
-        ResponseEntity<LinkGetterDto>  createdLink = restTemplate.postForEntity("/link", link,
+        ResponseEntity<LinkGetterDto>  createdLink = restTemplate.postForEntity("/links", link,
                 LinkGetterDto.class);
-        LinkGetterDto[] response = restTemplate.getForObject("/link/tags/1",
+        LinkGetterDto[] response = restTemplate.getForObject("/links/tags/1",
                 LinkGetterDto[].class);
         assertThat(response.length, is(1));
-        LinkGetterDto createdLinkByTag = response[0];
+        LinkGetterDto responseLink = response[0];
 
-        assertThat(createdLinkByTag, is(createdLink.getBody()));
+        assertThat(responseLink, is(createdLink.getBody()));
 
+    }
+
+    @Test
+    public void getLinksByUser() throws Exception{
+        User user = new User();
+        user.setUsername("author");
+        userRepository.save(user);
+
+        LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
+                LinkCreationDto.class);
+        ResponseEntity<LinkGetterDto>  createdLink = restTemplate.postForEntity("/links", link,
+                LinkGetterDto.class);
+        LinkGetterDto[] response = restTemplate.getForObject("/links/users/author",
+                LinkGetterDto[].class);
+        assertThat(response.length, is(1));
+        LinkGetterDto responseLink = response[0];
+        assertThat(responseLink, is(createdLink.getBody()));
     }
 }
 

@@ -3,6 +3,7 @@ package simplifier.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import simplifier.model.Link;
 import simplifier.model.User;
 import simplifier.repositories.UserRepository;
 
@@ -35,5 +36,17 @@ public class UserServiceImpl implements UserService {
         user.setEncryptedPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         return Optional.of(userRepository.save(user));
 
+    }
+
+    @Override
+    public void addLinkToUser(Link link) {
+        User user = link.getAuthor();
+        user.addLink(link);
+        userRepository.save(user);
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 }

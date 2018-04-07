@@ -9,5 +9,7 @@ public interface LinkService {
 
     Iterable<LinkGetterDto> findAllLinks();
 
-    Iterable<LinkGetterDto> getLinksByTag(String name);
+    Iterable<LinkGetterDto> getLinksByTag(String tagName);
+
+    Iterable<LinkGetterDto> getLinksByUser(String username);
 }

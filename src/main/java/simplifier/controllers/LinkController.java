@@ -11,7 +11,7 @@ import simplifier.services.LinkService;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("/link")
+@RequestMapping("/links")
 public class LinkController {
 
     private LinkService linkService;
@@ -33,7 +33,12 @@ public class LinkController {
     }
 
     @GetMapping(value = "/tags/{name}")
-    public Iterable<LinkGetterDto> getAllLinksByTag(@PathVariable String name) {
+    public Iterable<LinkGetterDto> getLinksByTag(@PathVariable String name) {
         return linkService.getLinksByTag(name);
+    }
+
+    @GetMapping(value = "/users/{username}")
+    public Iterable<LinkGetterDto> getLinksByUser(@PathVariable String username) {
+        return linkService.getLinksByUser(username);
     }
 }
