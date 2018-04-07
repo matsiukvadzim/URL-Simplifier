@@ -134,5 +134,24 @@ public class LinkControllerIT {
         assertThat(responseEntity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
         assertThat(responseEntity.getBody(), is(requiredMessage));
     }
+
+    @Test
+    public void getLinksByTag() throws Exception{
+        User user = new User();
+        user.setUsername("author");
+        userRepository.save(user);
+
+        LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
+                LinkCreationDto.class);
+        ResponseEntity<LinkGetterDto>  createdLink = restTemplate.postForEntity("/link", link,
+                LinkGetterDto.class);
+        LinkGetterDto[] response = restTemplate.getForObject("/link/tags/1",
+                LinkGetterDto[].class);
+        assertThat(response.length, is(1));
+        LinkGetterDto createdLinkByTag = response[0];
+
+        assertThat(createdLinkByTag, is(createdLink.getBody()));
+
+    }
 }
 

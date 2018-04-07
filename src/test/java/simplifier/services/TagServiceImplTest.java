@@ -11,6 +11,7 @@ import simplifier.repositories.TagRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -78,6 +79,17 @@ public class TagServiceImplTest {
 
         assertThat(tag.getLinks(), is(asList(link)));
         verify(tagRepository).saveAll(tags);
+        verifyNoMoreInteractions(tagRepository);
+    }
+
+    @Test
+    public void findByName() {
+        Tag tag = initTag();
+        when(tagRepository.findByName(tag.getName())).thenReturn(Optional.of(tag));
+
+        Optional<Tag> foundTag = tagService.findByName(tag.getName());
+        assertThat(foundTag.get(), is(tag));
+        verify(tagRepository).findByName(tag.getName());
         verifyNoMoreInteractions(tagRepository);
     }
 }

@@ -11,6 +11,7 @@ import simplifier.model.dto.LinkGetterDto;
 import simplifier.repositories.LinkRepository;
 import simplifier.repositories.UserRepository;
 
+import java.util.Collections;
 import java.util.Optional;
 
 @Service
@@ -67,5 +68,10 @@ public class LinkServiceImpl implements LinkService {
         return linkMapper.linksToLinkDtos(linkRepository.findAll());
     }
 
-
+    @Override
+    public Iterable<LinkGetterDto> getLinksByTag(String name) {
+       return tagService.findByName(name)
+               .map(tag -> linkMapper.linksToLinkDtos(tag.getLinks()))
+               .orElse(Collections.emptyList());
+    }
 }

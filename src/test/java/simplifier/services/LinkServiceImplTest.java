@@ -1,5 +1,6 @@
 package simplifier.services;
 
+import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,6 +67,8 @@ public class LinkServiceImplTest {
         User author = new User();
         author.setUsername("author");
         link.setAuthor(author);
+        tag1.addLink(link);
+        tag2.addLink(link);
 
         creationDto.setOriginalLink(link.getOriginalLink());
         creationDto.setDescription(link.getDescription());
@@ -137,5 +140,20 @@ public class LinkServiceImplTest {
         verify(tagService).addLinkToTags(link);
         verifyNoMoreInteractions(tagService, userRepository, linkRepository,
                 simplifyService, linkMapper);
+    }
+
+    @Test
+    public void getLinksByTag() {
+        Tag tag = link.getTags().get(0);
+        when(tagService.findByName(tag.getName())).thenReturn(Optional.of(tag));
+        when(linkMapper.linksToLinkDtos(tag.getLinks())).thenReturn(Lists.newArrayList(getterDto));
+
+        List<LinkGetterDto> linkList = Lists.newArrayList(linkService.getLinksByTag(tag.getName()));
+        assertThat(linkList.size(), is(1));
+        LinkGetterDto foundLink = linkList.get(0);
+        assertThat(foundLink, is(getterDto));
+        verify(tagService).findByName(tag.getName());
+        verify(linkMapper).linksToLinkDtos(tag.getLinks());
+        verifyNoMoreInteractions(tagService, linkMapper);
     }
 }

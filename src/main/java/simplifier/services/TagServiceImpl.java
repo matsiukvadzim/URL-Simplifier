@@ -9,6 +9,7 @@ import simplifier.repositories.TagRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -44,5 +45,10 @@ public class TagServiceImpl implements TagService {
             tags.add(tag);
         }
         tagRepository.saveAll(tags);
+    }
+
+    @Override
+    public Optional<Tag> findByName(String name) {
+        return tagRepository.findByName(name);
     }
 }

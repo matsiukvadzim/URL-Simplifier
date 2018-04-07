@@ -32,5 +32,8 @@ public class LinkController {
         return linkService.findAllLinks();
     }
 
-
+    @GetMapping(value = "/tags/{name}")
+    public Iterable<LinkGetterDto> getAllLinksByTag(@PathVariable String name) {
+        return linkService.getLinksByTag(name);
+    }
 }

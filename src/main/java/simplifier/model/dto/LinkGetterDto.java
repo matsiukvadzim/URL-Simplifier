@@ -1,5 +1,8 @@
 package simplifier.model.dto;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import java.util.List;
 
 public class LinkGetterDto {
@@ -62,5 +65,15 @@ public class LinkGetterDto {
 
     public void setClicks(Integer clicks) {
         this.clicks = clicks;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return EqualsBuilder.reflectionEquals(this, o);
+    }
+
+    @Override
+    public int hashCode() {
+        return HashCodeBuilder.reflectionHashCode(this);
     }
 }
