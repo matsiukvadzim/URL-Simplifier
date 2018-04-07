@@ -12,15 +12,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import simplifier.model.Link;
+import simplifier.model.Tag;
 import simplifier.model.User;
 import simplifier.model.dto.LinkCreationDto;
 import simplifier.model.dto.LinkGetterDto;
 import simplifier.repositories.LinkRepository;
+import simplifier.repositories.TagRepository;
 import simplifier.repositories.UserRepository;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -35,9 +39,11 @@ public class LinkControllerIT {
 
     private UserRepository userRepository;
 
+    private TagRepository tagRepository;
+
     private TestRestTemplate restTemplate;
 
-    ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     public void setLinkRepository(LinkRepository linkRepository) {
@@ -54,13 +60,37 @@ public class LinkControllerIT {
         this.restTemplate = restTemplate;
     }
 
-    @Test
-    public void createWithGeneratedShortened() throws IOException {
+    @Autowired
+    public void setTagRepository(TagRepository tagRepository) {
+        this.tagRepository = tagRepository;
+    }
 
+    private Link initLink() {
+        Link link = new Link();
+        link.setOriginalLink("link");
+        link.setShortenedLink("short");
+        link.setDescription("description");
+        List<Tag> tags = new ArrayList<>();
+        Tag tag = new Tag();
+        tag.setName("1");
+        tags.add(tag);
+        tagRepository.saveAll(tags);
+        link.setTags(tags);
+        link.setAuthor(initUser());
+        linkRepository.save(link);
+        return link;
+    }
+
+    private User initUser() {
         User user = new User();
         user.setUsername("author");
         userRepository.save(user);
+        return user;
+    }
 
+    @Test
+    public void createWithGeneratedShortened() throws IOException {
+        User user = initUser();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithoutShortened.JSON"),
                 LinkCreationDto.class);
@@ -79,10 +109,7 @@ public class LinkControllerIT {
 
     @Test
     public void createWithExistShortened() throws IOException {
-
-        User user = new User();
-        user.setUsername("author");
-        userRepository.save(user);
+        User user = initUser();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
                 LinkCreationDto.class);
@@ -118,9 +145,7 @@ public class LinkControllerIT {
 
     @Test
     public void conflictIfShortenedNotUnique() throws Exception {
-        User user = new User();
-        user.setUsername("author");
-        userRepository.save(user);
+        User user = initUser();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
                 LinkCreationDto.class);
@@ -137,38 +162,44 @@ public class LinkControllerIT {
 
     @Test
     public void getLinksByTag() throws Exception{
-        User user = new User();
-        user.setUsername("author");
-        userRepository.save(user);
+        Link link = initLink();
 
-        LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
-                LinkCreationDto.class);
-        ResponseEntity<LinkGetterDto>  createdLink = restTemplate.postForEntity("/links", link,
-                LinkGetterDto.class);
         LinkGetterDto[] response = restTemplate.getForObject("/links/tags/1",
                 LinkGetterDto[].class);
+
         assertThat(response.length, is(1));
         LinkGetterDto responseLink = response[0];
 
-        assertThat(responseLink, is(createdLink.getBody()));
+        assertThat(responseLink.getOriginalLink(), is(link.getOriginalLink()));
+        assertThat(responseLink.getShortenedLink(), is(link.getShortenedLink()));
+        assertThat(responseLink.getDescription(), is(link.getDescription()));
+        assertThat(responseLink.getAuthor(), is(link.getAuthor().getUsername()));
+        assertThat(responseLink.getClicks(), is(link.getClicks()));
+        List<String> tags = link.getTags().stream()
+                .map(tag -> tag.getName())
+                .collect(Collectors.toList());
+        assertThat(responseLink.getTags(), is(tags));
 
     }
 
     @Test
     public void getLinksByUser() throws Exception{
-        User user = new User();
-        user.setUsername("author");
-        userRepository.save(user);
+        Link link = initLink();
 
-        LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
-                LinkCreationDto.class);
-        ResponseEntity<LinkGetterDto>  createdLink = restTemplate.postForEntity("/links", link,
-                LinkGetterDto.class);
         LinkGetterDto[] response = restTemplate.getForObject("/links/users/author",
                 LinkGetterDto[].class);
         assertThat(response.length, is(1));
         LinkGetterDto responseLink = response[0];
-        assertThat(responseLink, is(createdLink.getBody()));
+
+        assertThat(responseLink.getOriginalLink(), is(link.getOriginalLink()));
+        assertThat(responseLink.getShortenedLink(), is(link.getShortenedLink()));
+        assertThat(responseLink.getDescription(), is(link.getDescription()));
+        assertThat(responseLink.getAuthor(), is(link.getAuthor().getUsername()));
+        assertThat(responseLink.getClicks(), is(link.getClicks()));
+        List<String> tags = link.getTags().stream()
+                .map(tag -> tag.getName())
+                .collect(Collectors.toList());
+        assertThat(responseLink.getTags(), is(tags));
     }
 }
 
