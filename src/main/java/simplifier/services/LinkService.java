@@ -3,6 +3,8 @@ package simplifier.services;
 import simplifier.model.dto.LinkCreationDto;
 import simplifier.model.dto.LinkGetterDto;
 
+import java.util.Optional;
+
 public interface LinkService {
 
     LinkGetterDto saveLink(LinkCreationDto link);
@@ -12,4 +14,6 @@ public interface LinkService {
     Iterable<LinkGetterDto> getLinksByTag(String tagName);
 
     Iterable<LinkGetterDto> getLinksByUser(String username);
+
+    Optional<String> redirect(String shortenedLink);
 }

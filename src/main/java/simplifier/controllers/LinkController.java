@@ -11,7 +11,6 @@ import simplifier.services.LinkService;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("/links")
 public class LinkController {
 
     private LinkService linkService;
@@ -21,24 +20,31 @@ public class LinkController {
         this.linkService = linkService;
     }
 
-    @PostMapping
+    @PostMapping("/links")
     public ResponseEntity<?> createLink(@Valid @RequestBody LinkCreationDto linkDto) {
         LinkGetterDto savedLink = linkService.saveLink(linkDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedLink);
     }
 
-    @GetMapping
+    @GetMapping("/links")
     public Iterable<LinkGetterDto> findAllLinks() {
         return linkService.findAllLinks();
     }
 
-    @GetMapping(value = "/tags/{name}")
+    @GetMapping(value = "/links/tags/{name}")
     public Iterable<LinkGetterDto> getLinksByTag(@PathVariable String name) {
         return linkService.getLinksByTag(name);
     }
 
-    @GetMapping(value = "/users/{username}")
+    @GetMapping(value = "/links/users/{username}")
     public Iterable<LinkGetterDto> getLinksByUser(@PathVariable String username) {
         return linkService.getLinksByUser(username);
+    }
+
+    @GetMapping("{shortened}")
+    public ResponseEntity<?> redirect(@PathVariable String shortened) {
+        return linkService.redirect(shortened)
+                .map(original -> ResponseEntity.status(HttpStatus.OK).body(original))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 }

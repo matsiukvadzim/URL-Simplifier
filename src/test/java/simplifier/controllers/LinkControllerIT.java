@@ -145,11 +145,10 @@ public class LinkControllerIT {
 
     @Test
     public void conflictIfShortenedNotUnique() throws Exception {
-        createUser();
+        createLink();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
                 LinkCreationDto.class);
-        restTemplate.postForEntity("/links", link, LinkGetterDto.class);
 
         ResponseEntity<String> responseEntity = restTemplate.postForEntity("/links",
                 link, String.class);
@@ -174,6 +173,21 @@ public class LinkControllerIT {
         LinkGetterDto[] response = restTemplate.getForObject("/links/users/author",
                 LinkGetterDto[].class);
         checkAreLinksTheSame(response, link);
+    }
+
+    @Test
+    public void redirect() {
+        createLink();
+        ResponseEntity<String> response = restTemplate.getForEntity("/short", String.class);
+        String requiredMessage = "link";
+        assertThat(response.getStatusCode(), is(HttpStatus.OK));
+        assertThat(response.getBody(), is(requiredMessage));
+    }
+
+    @Test
+    public void redirectIfShortenedNotExist() {
+        ResponseEntity<String> response = restTemplate.getForEntity("/short", String.class);
+        assertThat(response.getStatusCode(), is(HttpStatus.NOT_FOUND));
     }
 
     private void checkAreLinksTheSame(LinkGetterDto[] response, Link link) {
