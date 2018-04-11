@@ -53,7 +53,7 @@ public class UserControllerIT {
         user.setUsername("username");
         user.setPassword("password");
 
-        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/user",
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/users",
                 user, User.class);
 
         List<User> users = Lists.newArrayList(userRepository.findAll());
@@ -82,7 +82,7 @@ public class UserControllerIT {
         invalidUser.setUsername("test");
         invalidUser.setPassword("test");
 
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/user",
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/users",
                 invalidUser, String.class);
 
         List<User> users = Lists.newArrayList(userRepository.findAll());

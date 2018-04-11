@@ -8,4 +8,8 @@ public interface LinkService {
     LinkGetterDto saveLink(LinkCreationDto link);
 
     Iterable<LinkGetterDto> findAllLinks();
+
+    Iterable<LinkGetterDto> getLinksByTag(String tagName);
+
+    Iterable<LinkGetterDto> getLinksByUser(String username);
 }

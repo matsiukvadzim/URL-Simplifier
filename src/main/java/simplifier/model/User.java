@@ -22,7 +22,7 @@ public class User {
 
     private String encryptedPassword;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "author")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
     private List<Link> links = new ArrayList<>();
 
     public Integer getId() {

@@ -1,5 +1,6 @@
 package simplifier.services;
 
+import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,7 +15,6 @@ import simplifier.model.User;
 import simplifier.model.dto.LinkCreationDto;
 import simplifier.model.dto.LinkGetterDto;
 import simplifier.repositories.LinkRepository;
-import simplifier.repositories.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
 public class LinkServiceImplTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserService userService;
 
     @Mock
     private LinkRepository linkRepository;
@@ -66,6 +66,8 @@ public class LinkServiceImplTest {
         User author = new User();
         author.setUsername("author");
         link.setAuthor(author);
+        tag1.addLink(link);
+        tag2.addLink(link);
 
         creationDto.setOriginalLink(link.getOriginalLink());
         creationDto.setDescription(link.getDescription());
@@ -90,7 +92,7 @@ public class LinkServiceImplTest {
 
         when(linkRepository.save(link)).thenReturn(link);
         when(tagService.saveTags(link.getTags())).thenReturn(link.getTags());
-        when(userRepository.findByUsername(link.getAuthor().getUsername()))
+        when(userService.findByUsername(link.getAuthor().getUsername()))
                 .thenReturn(Optional.of(link.getAuthor()));
         when(linkMapper.linkDtoToLink(creationDto)).thenReturn(link);
         when(linkMapper.linkToLinkDto(link)).thenReturn(getterDto);
@@ -99,12 +101,13 @@ public class LinkServiceImplTest {
 
         assertThat(savedLink.getShortenedLink(), is(link.getShortenedLink()));
         verify(tagService).saveTags(link.getTags());
-        verify(userRepository).findByUsername(link.getAuthor().getUsername());
+        verify(userService).findByUsername(link.getAuthor().getUsername());
+        verify(userService).addLinkToUser(link);
         verify(linkRepository).save(link);
         verify(linkMapper).linkDtoToLink(creationDto);
         verify(linkMapper).linkToLinkDto(link);
         verify(tagService).addLinkToTags(link);
-        verifyNoMoreInteractions(tagService, userRepository, linkRepository, linkMapper);
+        verifyNoMoreInteractions(tagService, userService, linkRepository, linkMapper);
 
     }
 
@@ -113,7 +116,7 @@ public class LinkServiceImplTest {
 
         when(linkRepository.save(link)).thenReturn(link);
         when(tagService.saveTags(link.getTags())).thenReturn(link.getTags());
-        when(userRepository.findByUsername(link.getAuthor().getUsername()))
+        when(userService.findByUsername(link.getAuthor().getUsername()))
                 .thenReturn(Optional.of(link.getAuthor()));
         when(linkMapper.linkDtoToLink(creationDto)).thenReturn(link);
         when(linkMapper.linkToLinkDto(link)).thenReturn(getterDto);
@@ -129,13 +132,44 @@ public class LinkServiceImplTest {
 
         assertThat(savedLink.getShortenedLink(), is(generatedLink));
         verify(tagService).saveTags(link.getTags());
-        verify(userRepository).findByUsername(link.getAuthor().getUsername());
+        verify(userService).findByUsername(link.getAuthor().getUsername());
+        verify(userService).addLinkToUser(link);
         verify(linkRepository, times(2)).save(link);
         verify(simplifyService).encode(link.getId());
         verify(linkMapper).linkDtoToLink(creationDto);
         verify(linkMapper).linkToLinkDto(link);
         verify(tagService).addLinkToTags(link);
-        verifyNoMoreInteractions(tagService, userRepository, linkRepository,
+        verifyNoMoreInteractions(tagService, userService, linkRepository,
                 simplifyService, linkMapper);
+    }
+
+    @Test
+    public void getLinksByTag() {
+        Tag tag = link.getTags().get(0);
+        when(tagService.findByName(tag.getName())).thenReturn(Optional.of(tag));
+        when(linkMapper.linksToLinkDtos(tag.getLinks())).thenReturn(Lists.newArrayList(getterDto));
+
+        List<LinkGetterDto> linkList = Lists.newArrayList(linkService.getLinksByTag(tag.getName()));
+        assertThat(linkList.size(), is(1));
+        LinkGetterDto foundLink = linkList.get(0);
+        assertThat(foundLink, is(getterDto));
+        verify(tagService).findByName(tag.getName());
+        verify(linkMapper).linksToLinkDtos(tag.getLinks());
+        verifyNoMoreInteractions(tagService, linkMapper);
+    }
+
+    @Test
+    public void getLinksByUser() {
+        User author = link.getAuthor();
+        when(userService.findByUsername(author.getUsername())).thenReturn(Optional.of(author));
+        when(linkMapper.linksToLinkDtos(author.getLinks())).thenReturn(Lists.newArrayList(getterDto));
+
+        List<LinkGetterDto> linkList = Lists.newArrayList(linkService.getLinksByUser(author.getUsername()));
+        assertThat(linkList.size(), is(1));
+        LinkGetterDto foundLink = linkList.get(0);
+        assertThat(foundLink, is(getterDto));
+        verify(userService).findByUsername(author.getUsername());
+        verify(linkMapper).linksToLinkDtos(author.getLinks());
+        verifyNoMoreInteractions(userService, linkMapper);
     }
 }

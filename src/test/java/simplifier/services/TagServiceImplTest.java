@@ -11,8 +11,9 @@ import simplifier.repositories.TagRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.*;
@@ -28,7 +29,7 @@ public class TagServiceImplTest {
 
     private List<Tag> tags = new ArrayList<>();
 
-    private Tag initTag() {
+    private Tag createTag() {
         Tag tag = new Tag();
         tag.setName("tag1");
         tags.add(tag);
@@ -36,25 +37,25 @@ public class TagServiceImplTest {
     }
     @Test
     public void saveTag() {
-        Tag tag = initTag();
+        Tag tag = createTag();
 
-        when(tagRepository.findByNameIn(asList(tag.getName()))).thenReturn(new ArrayList<>());
+        when(tagRepository.findByNameIn(singletonList(tag.getName()))).thenReturn(new ArrayList<>());
         when(tagRepository.saveAll(tags)).thenReturn(tags);
 
         List<Tag> savedTags = tagService.saveTags(tags);
 
         Tag savedTag = savedTags.get(0);
         assertThat(savedTag, is(tag));
-        verify(tagRepository).findByNameIn(asList(tag.getName()));
+        verify(tagRepository).findByNameIn(singletonList(tag.getName()));
         verify(tagRepository).saveAll(tags);
         verifyNoMoreInteractions(tagRepository);
     }
 
     @Test
     public void saveIfTagAlreadyExist() {
-        Tag tag = initTag();
+        Tag tag = createTag();
 
-        when(tagRepository.findByNameIn(asList(tag.getName()))).thenReturn(tags);
+        when(tagRepository.findByNameIn(singletonList(tag.getName()))).thenReturn(tags);
         when(tagRepository.saveAll(tags)).thenReturn(tags);
 
         List<Tag> savedTags = tagService.saveTags(tags);
@@ -62,22 +63,33 @@ public class TagServiceImplTest {
         Tag savedTag = savedTags.get(0);
         assertThat(savedTag, is(tag));
         assertThat(savedTags.size(), is(1));
-        verify(tagRepository).findByNameIn(asList(tag.getName()));
+        verify(tagRepository).findByNameIn(singletonList(tag.getName()));
         verify(tagRepository).saveAll(tags);
         verifyNoMoreInteractions(tagRepository);
     }
 
     @Test
     public void addLinkToTags() {
-        Tag tag = initTag();
+        Tag tag = createTag();
         Link link = new Link();
         link.setTags(tags);
 
         when(tagRepository.saveAll(tags)).thenReturn(tags);
         tagService.addLinkToTags(link);
 
-        assertThat(tag.getLinks(), is(asList(link)));
+        assertThat(tag.getLinks(), is(singletonList(link)));
         verify(tagRepository).saveAll(tags);
+        verifyNoMoreInteractions(tagRepository);
+    }
+
+    @Test
+    public void findByName() {
+        Tag tag = createTag();
+        when(tagRepository.findByName(tag.getName())).thenReturn(Optional.of(tag));
+
+        Optional<Tag> foundTag = tagService.findByName(tag.getName());
+        assertThat(foundTag.get(), is(tag));
+        verify(tagRepository).findByName(tag.getName());
         verifyNoMoreInteractions(tagRepository);
     }
 }
