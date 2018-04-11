@@ -163,34 +163,22 @@ public class LinkControllerIT {
     @Test
     public void getLinksByTag() throws Exception{
         Link link = initLink();
-
         LinkGetterDto[] response = restTemplate.getForObject("/links/tags/1",
                 LinkGetterDto[].class);
-
-        assertThat(response.length, is(1));
-        LinkGetterDto responseLink = response[0];
-
-        assertThat(responseLink.getOriginalLink(), is(link.getOriginalLink()));
-        assertThat(responseLink.getShortenedLink(), is(link.getShortenedLink()));
-        assertThat(responseLink.getDescription(), is(link.getDescription()));
-        assertThat(responseLink.getAuthor(), is(link.getAuthor().getUsername()));
-        assertThat(responseLink.getClicks(), is(link.getClicks()));
-        List<String> tags = link.getTags().stream()
-                .map(tag -> tag.getName())
-                .collect(Collectors.toList());
-        assertThat(responseLink.getTags(), is(tags));
-
+        checkAreLinksTheSame(response, link);
     }
 
     @Test
     public void getLinksByUser() throws Exception{
         Link link = initLink();
-
         LinkGetterDto[] response = restTemplate.getForObject("/links/users/author",
                 LinkGetterDto[].class);
+        checkAreLinksTheSame(response, link);
+    }
+
+    private void checkAreLinksTheSame(LinkGetterDto[] response, Link link) {
         assertThat(response.length, is(1));
         LinkGetterDto responseLink = response[0];
-
         assertThat(responseLink.getOriginalLink(), is(link.getOriginalLink()));
         assertThat(responseLink.getShortenedLink(), is(link.getShortenedLink()));
         assertThat(responseLink.getDescription(), is(link.getDescription()));
