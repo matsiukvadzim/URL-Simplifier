@@ -65,7 +65,7 @@ public class LinkControllerIT {
         this.tagRepository = tagRepository;
     }
 
-    private Link initLink() {
+    private Link createLink() {
         Link link = new Link();
         link.setOriginalLink("link");
         link.setShortenedLink("short");
@@ -76,12 +76,12 @@ public class LinkControllerIT {
         tags.add(tag);
         tagRepository.saveAll(tags);
         link.setTags(tags);
-        link.setAuthor(initUser());
+        link.setAuthor(createUser());
         linkRepository.save(link);
         return link;
     }
 
-    private User initUser() {
+    private User createUser() {
         User user = new User();
         user.setUsername("author");
         userRepository.save(user);
@@ -90,7 +90,7 @@ public class LinkControllerIT {
 
     @Test
     public void createWithGeneratedShortened() throws IOException {
-        User user = initUser();
+        createUser();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithoutShortened.JSON"),
                 LinkCreationDto.class);
@@ -109,7 +109,7 @@ public class LinkControllerIT {
 
     @Test
     public void createWithExistShortened() throws IOException {
-        User user = initUser();
+        createUser();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
                 LinkCreationDto.class);
@@ -145,7 +145,7 @@ public class LinkControllerIT {
 
     @Test
     public void conflictIfShortenedNotUnique() throws Exception {
-        User user = initUser();
+        createUser();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
                 LinkCreationDto.class);
@@ -161,16 +161,16 @@ public class LinkControllerIT {
     }
 
     @Test
-    public void getLinksByTag() throws Exception{
-        Link link = initLink();
+    public void getLinksByTag() {
+        Link link = createLink();
         LinkGetterDto[] response = restTemplate.getForObject("/links/tags/1",
                 LinkGetterDto[].class);
         checkAreLinksTheSame(response, link);
     }
 
     @Test
-    public void getLinksByUser() throws Exception{
-        Link link = initLink();
+    public void getLinksByUser() {
+        Link link = createLink();
         LinkGetterDto[] response = restTemplate.getForObject("/links/users/author",
                 LinkGetterDto[].class);
         checkAreLinksTheSame(response, link);
@@ -185,7 +185,7 @@ public class LinkControllerIT {
         assertThat(responseLink.getAuthor(), is(link.getAuthor().getUsername()));
         assertThat(responseLink.getClicks(), is(link.getClicks()));
         List<String> tags = link.getTags().stream()
-                .map(tag -> tag.getName())
+                .map(Tag::getName)
                 .collect(Collectors.toList());
         assertThat(responseLink.getTags(), is(tags));
     }
