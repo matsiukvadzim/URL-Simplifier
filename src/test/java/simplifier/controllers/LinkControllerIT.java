@@ -176,6 +176,21 @@ public class LinkControllerIT {
         checkAreLinksTheSame(response, link);
     }
 
+    @Test
+    public void redirect() {
+        createLink();
+        ResponseEntity<String> response = restTemplate.getForEntity("/short", String.class);
+        String requiredMessage = "link";
+        assertThat(response.getStatusCode(), is(HttpStatus.OK));
+        assertThat(response.getBody(), is(requiredMessage));
+    }
+
+    @Test
+    public void redirectIfShortenedNotExist() {
+        ResponseEntity<String> response = restTemplate.getForEntity("/short", String.class);
+        assertThat(response.getStatusCode(), is(HttpStatus.NOT_FOUND));
+    }
+
     private void checkAreLinksTheSame(LinkGetterDto[] response, Link link) {
         assertThat(response.length, is(1));
         LinkGetterDto responseLink = response[0];

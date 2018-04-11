@@ -81,4 +81,17 @@ public class LinkServiceImpl implements LinkService {
                 .map(user -> linkMapper.linksToLinkDtos(user.getLinks()))
                 .orElse(Collections.emptyList());
     }
+
+    @Override
+    public Optional<String> redirect(String shortenedLink) {
+        return linkRepository.findByShortenedLink(shortenedLink)
+                .map(this::updateClicks)
+                .map(Link::getOriginalLink);
+    }
+
+    private Link updateClicks(Link link) {
+        link.addClicks();
+        linkRepository.save(link);
+        return link;
+    }
 }
