@@ -47,4 +47,11 @@ public class LinkController {
                 .map(original -> ResponseEntity.status(HttpStatus.OK).body(original))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
+
+    @GetMapping("/links/{shortened}")
+    public ResponseEntity<?> getLinkByShortened(@PathVariable String shortened) {
+        return linkService.findByShortenedLink(shortened)
+                .map(linkGetterDto -> ResponseEntity.status(HttpStatus.OK).body(linkGetterDto))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
 }

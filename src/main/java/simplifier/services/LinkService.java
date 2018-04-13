@@ -16,4 +16,6 @@ public interface LinkService {
     Iterable<LinkGetterDto> getLinksByUser(String username);
 
     Optional<String> redirect(String shortenedLink);
+
+    Optional<LinkGetterDto> findByShortenedLink(String shortened);
 }

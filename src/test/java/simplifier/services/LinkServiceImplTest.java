@@ -172,4 +172,31 @@ public class LinkServiceImplTest {
         verify(linkMapper).linksToLinkDtos(author.getLinks());
         verifyNoMoreInteractions(userService, linkMapper);
     }
+
+    @Test
+    public void redirect() {
+        link.setShortenedLink("short");
+        when(linkRepository.findByShortenedLink(link.getShortenedLink())).thenReturn(Optional.of(link));
+        when(linkRepository.save(link)).thenReturn(link);
+        Optional<String> original = linkService.redirect(link.getShortenedLink());
+        assertThat(original.get(), is(link.getOriginalLink()));
+        verify(linkRepository).findByShortenedLink(link.getShortenedLink());
+        verify(linkRepository).save(link);
+        verifyNoMoreInteractions(linkRepository);
+    }
+
+    @Test
+    public void findByShortenedLink() {
+        link.setShortenedLink("short");
+        getterDto.setShortenedLink(link.getShortenedLink());
+        when(linkRepository.findByShortenedLink(link.getShortenedLink())).thenReturn(Optional.of(link));
+        when(linkMapper.linkToLinkDto(link)).thenReturn(getterDto);
+
+        Optional<LinkGetterDto> linkGetterDto = linkService.findByShortenedLink(link.getShortenedLink());
+
+        assertThat(linkGetterDto.get().getShortenedLink(), is(link.getShortenedLink()));
+        verify(linkRepository).findByShortenedLink(link.getShortenedLink());
+        verify(linkMapper).linkToLinkDto(link);
+        verifyNoMoreInteractions(linkRepository, linkMapper);
+    }
 }

@@ -140,7 +140,6 @@ public class LinkControllerIT {
 
         assertThat(responseEntity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
         assertThat(responseEntity.getBody(), is(requiredMessage));
-
     }
 
     @Test
@@ -164,7 +163,9 @@ public class LinkControllerIT {
         Link link = createLink();
         LinkGetterDto[] response = restTemplate.getForObject("/links/tags/1",
                 LinkGetterDto[].class);
-        checkAreLinksTheSame(response, link);
+        assertThat(response.length, is(1));
+        LinkGetterDto responseLink = response[0];
+        checkAreLinksTheSame(responseLink, link);
     }
 
     @Test
@@ -172,7 +173,9 @@ public class LinkControllerIT {
         Link link = createLink();
         LinkGetterDto[] response = restTemplate.getForObject("/links/users/author",
                 LinkGetterDto[].class);
-        checkAreLinksTheSame(response, link);
+        assertThat(response.length, is(1));
+        LinkGetterDto responseLink = response[0];
+        checkAreLinksTheSame(responseLink, link);
     }
 
     @Test
@@ -190,9 +193,15 @@ public class LinkControllerIT {
         assertThat(response.getStatusCode(), is(HttpStatus.NOT_FOUND));
     }
 
-    private void checkAreLinksTheSame(LinkGetterDto[] response, Link link) {
-        assertThat(response.length, is(1));
-        LinkGetterDto responseLink = response[0];
+    @Test
+    public void getLinkByShortened() {
+        Link link = createLink();
+        LinkGetterDto response = restTemplate.getForObject("/links/short",
+                LinkGetterDto.class);
+        checkAreLinksTheSame(response, link);
+    }
+
+    private void checkAreLinksTheSame(LinkGetterDto responseLink, Link link) {
         assertThat(responseLink.getOriginalLink(), is(link.getOriginalLink()));
         assertThat(responseLink.getShortenedLink(), is(link.getShortenedLink()));
         assertThat(responseLink.getDescription(), is(link.getDescription()));
