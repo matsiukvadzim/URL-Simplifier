@@ -49,3 +49,6 @@ nb-configuration.xml
 release.properties
 pom.xml.releaseBackup
 pom.xml.tag
+.mvn/wrapper/maven-wrapper.properties
+mvnw
+mvnw.cmd

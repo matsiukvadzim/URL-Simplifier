@@ -89,6 +89,12 @@ public class LinkServiceImpl implements LinkService {
                 .map(Link::getOriginalLink);
     }
 
+    @Override
+    public Optional<LinkGetterDto> findByShortenedLink(String shortened) {
+        return linkRepository.findByShortenedLink(shortened)
+                .map(link -> linkMapper.linkToLinkDto(link));
+    }
+
     private Link updateClicks(Link link) {
         link.addClicks();
         linkRepository.save(link);
