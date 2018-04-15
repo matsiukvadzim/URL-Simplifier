@@ -95,6 +95,23 @@ public class LinkServiceImpl implements LinkService {
                 .map(link -> linkMapper.linkToLinkDto(link));
     }
 
+    @Override
+    public LinkGetterDto updateLink(String shortened, LinkCreationDto link) {
+        Link updatedLink = linkMapper.linkDtoToLink(link);
+        Link savedLink = linkRepository.findByShortenedLink(shortened).get();
+        savedLink.setOriginalLink(link.getOriginalLink());
+        if (link.getShortenedLink() == null) {
+            savedLink.setShortenedLink(shortened);
+        }
+        else {
+            savedLink.setShortenedLink(link.getShortenedLink());
+        }
+        savedLink.setDescription(link.getDescription());
+        savedLink.setTags(tagService.saveTags(updatedLink.getTags()));
+        tagService.addLinkToTags(savedLink);
+        return linkMapper.linkToLinkDto(linkRepository.save(savedLink));
+    }
+
     private Link updateClicks(Link link) {
         link.addClicks();
         linkRepository.save(link);

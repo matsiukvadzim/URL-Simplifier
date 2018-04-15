@@ -54,4 +54,10 @@ public class LinkController {
                 .map(linkGetterDto -> ResponseEntity.status(HttpStatus.OK).body(linkGetterDto))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
+
+    @PutMapping("/links/{shortened}")
+    public LinkGetterDto updateLink(@PathVariable String shortened,
+                                       @Valid @RequestBody LinkCreationDto linkDto) {
+        return linkService.updateLink(shortened, linkDto);
+    }
 }
