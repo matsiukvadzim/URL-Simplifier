@@ -18,4 +18,6 @@ public interface LinkService {
     Optional<String> redirect(String shortenedLink);
 
     Optional<LinkGetterDto> findByShortenedLink(String shortened);
+
+    LinkGetterDto updateLink(String shortened, LinkCreationDto link);
 }

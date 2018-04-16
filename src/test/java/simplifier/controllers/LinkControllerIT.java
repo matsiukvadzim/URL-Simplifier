@@ -7,6 +7,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
@@ -24,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -199,6 +202,31 @@ public class LinkControllerIT {
         LinkGetterDto response = restTemplate.getForObject("/links/short",
                 LinkGetterDto.class);
         checkAreLinksTheSame(response, link);
+    }
+
+    @Test
+    public void updateLink() throws IOException {
+        createLink();
+        LinkCreationDto link = mapper.readValue(new File("src/test/resources/UpdateLink.JSON"),
+                LinkCreationDto.class);
+        restTemplate.put("/links/short",
+                link, LinkGetterDto.class);
+        assertThat(linkRepository.findByShortenedLink("short"), is(Optional.empty()));
+        Link updatedLink = linkRepository.findByShortenedLink(link.getShortenedLink()).get();
+        assertThat(updatedLink, is(notNullValue()));
+        assertThat(updatedLink.getOriginalLink(), is(link.getOriginalLink()));
+        assertThat(updatedLink.getDescription(), is(link.getDescription()));
+    }
+
+    @Test
+    public void NotFoundIfShortenedNotExistWhileUpdatingLink() throws IOException {
+        createUser();
+        LinkCreationDto link = mapper.readValue(new File("src/test/resources/UpdateLink.JSON"),
+                LinkCreationDto.class);
+        HttpEntity<LinkCreationDto> entity = new HttpEntity<>(link);
+        ResponseEntity<String> response = restTemplate.exchange("/links/non-existing shortened", HttpMethod.PUT,
+                entity,String.class);
+        assertThat(response.getStatusCode(), is(HttpStatus.NOT_FOUND));
     }
 
     private void checkAreLinksTheSame(LinkGetterDto responseLink, Link link) {
