@@ -199,4 +199,33 @@ public class LinkServiceImplTest {
         verify(linkMapper).linkToLinkDto(link);
         verifyNoMoreInteractions(linkRepository, linkMapper);
     }
+
+    @Test
+    public void updateLink() {
+        link.setShortenedLink("short");
+        when(linkMapper.linkDtoToLink(creationDto)).thenReturn(link);
+        when(linkRepository.findByShortenedLink("short")).thenReturn(Optional.of(link));
+        when(tagService.saveTags(link.getTags())).thenReturn(link.getTags());
+        when(linkRepository.save(link)).thenReturn(link);
+        when(linkMapper.linkToLinkDto(link)).thenReturn(getterDto);
+        creationDto.setOriginalLink("updatedLink");
+        creationDto.setShortenedLink("updatedShort");
+        creationDto.setDescription("updatedDescription");
+        getterDto.setOriginalLink("updatedLink");
+        getterDto.setShortenedLink("updatedShort");
+        getterDto.setDescription("updatedDescription");
+
+        LinkGetterDto updatedLink = linkService.updateLink("short", creationDto);
+
+        assertThat(updatedLink.getOriginalLink(), is(creationDto.getOriginalLink()));
+        assertThat(updatedLink.getShortenedLink(), is(creationDto.getShortenedLink()));
+        assertThat(updatedLink.getDescription(), is(creationDto.getDescription()));
+        verify(linkMapper).linkDtoToLink(creationDto);
+        verify(linkRepository).findByShortenedLink("short");
+        verify(tagService).saveTags(link.getTags());
+        verify(linkRepository).save(link);
+        verify(linkMapper).linkToLinkDto(link);
+        verify(tagService).addLinkToTags(link);
+        verifyNoMoreInteractions(linkMapper, linkMapper, tagService);
+    }
 }
