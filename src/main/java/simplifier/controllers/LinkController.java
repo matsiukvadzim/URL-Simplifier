@@ -26,7 +26,7 @@ public class LinkController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedLink);
     }
 
-    @GetMapping("/links")
+    @GetMapping("/links/all")
     public Iterable<LinkGetterDto> findAllLinks() {
         return linkService.findAllLinks();
     }

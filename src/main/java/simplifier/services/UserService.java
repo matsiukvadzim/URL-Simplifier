@@ -12,4 +12,6 @@ public interface UserService {
     Optional<User> findByUsername(String username);
 
     void addLinkToUser(Link link);
+
+    String login(User user);
 }

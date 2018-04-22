@@ -17,8 +17,7 @@ import simplifier.repositories.UserRepository;
 
 import java.util.List;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
@@ -53,7 +52,7 @@ public class UserControllerIT {
         user.setUsername("username");
         user.setPassword("password");
 
-        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/users",
+        ResponseEntity<User> responseEntity = restTemplate.postForEntity("/users/sign-up",
                 user, User.class);
 
         List<User> users = Lists.newArrayList(userRepository.findAll());
@@ -82,7 +81,7 @@ public class UserControllerIT {
         invalidUser.setUsername("test");
         invalidUser.setPassword("test");
 
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/users",
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/users/sign-up",
                 invalidUser, String.class);
 
         List<User> users = Lists.newArrayList(userRepository.findAll());
@@ -94,6 +93,37 @@ public class UserControllerIT {
         String requiredMessage = "Username already exists";
 
         assertThat(responseEntity.getStatusCode(), is(HttpStatus.CONFLICT));
+        assertThat(responseEntity.getBody(), is(requiredMessage));
+    }
+
+    @Test
+    public void login() {
+        User existingUser = new User();
+        existingUser.setUsername("test");
+        existingUser.setEncryptedPassword(passwordEncoder.encode("test"));
+        userRepository.save(existingUser);
+
+        User user = new User();
+        user.setUsername("test");
+        user.setPassword("test");
+
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/users/login",
+                user, String.class);
+
+        assertThat(responseEntity.getStatusCode(), is(HttpStatus.OK));
+        assertThat(responseEntity.getBody(), is(notNullValue()));
+    }
+
+    @Test
+    public void http422IfLoginInvalid() {
+        User user = new User();
+        user.setUsername("test");
+        user.setPassword("test");
+
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/users/login",
+                user, String.class);
+        String requiredMessage = "username or password is incorrect";
+        assertThat(responseEntity.getStatusCode(), is(HttpStatus.UNPROCESSABLE_ENTITY));
         assertThat(responseEntity.getBody(), is(requiredMessage));
     }
 }
