@@ -7,10 +7,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import simplifier.model.Link;
@@ -48,6 +46,8 @@ public class LinkControllerIT {
 
     private ObjectMapper mapper = new ObjectMapper();
 
+    private BCryptPasswordEncoder passwordEncoder;
+
     @Autowired
     public void setLinkRepository(LinkRepository linkRepository) {
         this.linkRepository = linkRepository;
@@ -66,6 +66,11 @@ public class LinkControllerIT {
     @Autowired
     public void setTagRepository(TagRepository tagRepository) {
         this.tagRepository = tagRepository;
+    }
+
+    @Autowired
+    public void setPasswordEncoder(BCryptPasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
     }
 
     private Link createLink() {
@@ -87,19 +92,35 @@ public class LinkControllerIT {
     private User createUser() {
         User user = new User();
         user.setUsername("author");
+        user.setEncryptedPassword(passwordEncoder.encode("password"));
         userRepository.save(user);
         return user;
+    }
+
+    private HttpHeaders getHeadersWithToken() {
+        User user = new User();
+        user.setUsername("author");
+        user.setPassword("password");
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/users/login",
+                user, String.class);
+        String token = responseEntity.getBody();
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        return httpHeaders;
     }
 
     @Test
     public void createWithGeneratedShortened() throws IOException {
         createUser();
+        HttpHeaders headers = getHeadersWithToken();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithoutShortened.JSON"),
                 LinkCreationDto.class);
 
-        ResponseEntity<LinkGetterDto> responseEntity = restTemplate.postForEntity("/links",
-                link, LinkGetterDto.class);
+        HttpEntity <LinkCreationDto> entity = new HttpEntity<>(link, headers);
+
+        ResponseEntity<LinkGetterDto> responseEntity = restTemplate.exchange("/links", HttpMethod.POST,
+                entity, LinkGetterDto.class);
 
         LinkGetterDto savedLink = responseEntity.getBody();
 
@@ -113,12 +134,15 @@ public class LinkControllerIT {
     @Test
     public void createWithExistShortened() throws IOException {
         createUser();
+        HttpHeaders headers = getHeadersWithToken();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
                 LinkCreationDto.class);
 
-        ResponseEntity<LinkGetterDto> responseEntity = restTemplate.postForEntity("/links",
-                link, LinkGetterDto.class);
+        HttpEntity <LinkCreationDto> entity = new HttpEntity<>(link, headers);
+
+        ResponseEntity<LinkGetterDto> responseEntity = restTemplate.exchange("/links", HttpMethod.POST,
+                entity, LinkGetterDto.class);
 
         LinkGetterDto savedLink = responseEntity.getBody();
 
@@ -133,11 +157,15 @@ public class LinkControllerIT {
 
     @Test
     public void conflictIfUserNotExist() throws IOException {
+        createUser();
+        HttpHeaders headers = getHeadersWithToken();
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithEmptyUser.JSON"),
                 LinkCreationDto.class);
 
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/links",
-                link, String.class);
+        HttpEntity <LinkCreationDto> entity = new HttpEntity<>(link, headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange("/links", HttpMethod.POST,
+                entity, String.class);
 
         String requiredMessage = "User not found";
 
@@ -148,12 +176,15 @@ public class LinkControllerIT {
     @Test
     public void conflictIfShortenedNotUnique() throws Exception {
         createLink();
+        HttpHeaders headers = getHeadersWithToken();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
                 LinkCreationDto.class);
 
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/links",
-                link, String.class);
+        HttpEntity <LinkCreationDto> entity = new HttpEntity<>(link, headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange("/links", HttpMethod.POST,
+                entity, String.class);
 
         String requiredMessage = "Invalid shortened";
 
@@ -164,8 +195,15 @@ public class LinkControllerIT {
     @Test
     public void getLinksByTag() {
         Link link = createLink();
-        LinkGetterDto[] response = restTemplate.getForObject("/links/tags/1",
-                LinkGetterDto[].class);
+        HttpHeaders headers = getHeadersWithToken();
+
+        HttpEntity entity = new HttpEntity(headers);
+
+        ResponseEntity<LinkGetterDto[]> responseEntity = restTemplate.exchange("/links/tags/1",
+                HttpMethod.GET, entity, LinkGetterDto[].class);
+
+        assertThat(responseEntity.getBody(), is(notNullValue()));
+        LinkGetterDto[] response = responseEntity.getBody();
         assertThat(response.length, is(1));
         LinkGetterDto responseLink = response[0];
         checkAreLinksTheSame(responseLink, link);
@@ -174,8 +212,15 @@ public class LinkControllerIT {
     @Test
     public void getLinksByUser() {
         Link link = createLink();
-        LinkGetterDto[] response = restTemplate.getForObject("/links/users/author",
-                LinkGetterDto[].class);
+        HttpHeaders headers = getHeadersWithToken();
+
+        HttpEntity entity = new HttpEntity(headers);
+
+        ResponseEntity<LinkGetterDto[]> responseEntity = restTemplate.exchange("/links/users/author",
+                HttpMethod.GET, entity, LinkGetterDto[].class);
+
+        assertThat(responseEntity.getBody(), is(notNullValue()));
+        LinkGetterDto[] response = responseEntity.getBody();
         assertThat(response.length, is(1));
         LinkGetterDto responseLink = response[0];
         checkAreLinksTheSame(responseLink, link);
@@ -199,18 +244,27 @@ public class LinkControllerIT {
     @Test
     public void getLinkByShortened() {
         Link link = createLink();
-        LinkGetterDto response = restTemplate.getForObject("/links/short",
-                LinkGetterDto.class);
+        HttpHeaders headers = getHeadersWithToken();
+
+        HttpEntity entity = new HttpEntity(headers);
+
+        ResponseEntity<LinkGetterDto> responseEntity = restTemplate.exchange("/links/short",
+                HttpMethod.GET, entity, LinkGetterDto.class);
+
+        LinkGetterDto response = responseEntity.getBody();
         checkAreLinksTheSame(response, link);
     }
 
     @Test
     public void updateLink() throws IOException {
         createLink();
+        HttpHeaders headers = getHeadersWithToken();
+
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/UpdateLink.JSON"),
                 LinkCreationDto.class);
-        restTemplate.put("/links/short",
-                link, LinkGetterDto.class);
+
+        HttpEntity<LinkCreationDto> entity = new HttpEntity<>(link, headers);
+        restTemplate.exchange("/links/short", HttpMethod.PUT, entity, LinkGetterDto.class);
         assertThat(linkRepository.findByShortenedLink("short"), is(Optional.empty()));
         Link updatedLink = linkRepository.findByShortenedLink(link.getShortenedLink()).get();
         assertThat(updatedLink, is(notNullValue()));
@@ -221,9 +275,10 @@ public class LinkControllerIT {
     @Test
     public void NotFoundIfShortenedNotExistWhileUpdatingLink() throws IOException {
         createUser();
+        HttpHeaders headers = getHeadersWithToken();
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/UpdateLink.JSON"),
                 LinkCreationDto.class);
-        HttpEntity<LinkCreationDto> entity = new HttpEntity<>(link);
+        HttpEntity<LinkCreationDto> entity = new HttpEntity<>(link, headers);
         ResponseEntity<String> response = restTemplate.exchange("/links/non-existing shortened", HttpMethod.PUT,
                 entity,String.class);
         assertThat(response.getStatusCode(), is(HttpStatus.NOT_FOUND));
