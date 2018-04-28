@@ -22,7 +22,7 @@ public class TokenHelper {
     private String secretKey;
 
     @Value("${security.jwt.token.expire-length:3600000}")
-    private long validityInMilliseconds = 3600000; // 1 hour
+    private long validityInMilliseconds = 3_600_000; // 1 hour
 
     private UserDetailsService userDetailsService;
 

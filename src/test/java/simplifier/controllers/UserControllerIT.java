@@ -46,11 +46,16 @@ public class UserControllerIT {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @Test
-    public void createUser() {
+    private User createUser() {
         User user = new User();
-        user.setUsername("username");
-        user.setPassword("password");
+        user.setUsername("test");
+        user.setPassword("test");
+        return user;
+    }
+
+    @Test
+    public void registerUser() {
+        User user = createUser();
 
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/users/sign-up",
                 user, User.class);
@@ -71,18 +76,14 @@ public class UserControllerIT {
 
     @Test
     public void conflictIfUsernameNotUnique() {
-        User existingUser = new User();
-        existingUser.setUsername("test");
-        existingUser.setPassword("test");
+        User existingUser = createUser();
 
         User savedUser = userRepository.save(existingUser);
 
-        User invalidUser = new User();
-        invalidUser.setUsername("test");
-        invalidUser.setPassword("test");
+        User duplicateUser = createUser();
 
         ResponseEntity<String> responseEntity = restTemplate.postForEntity("/users/sign-up",
-                invalidUser, String.class);
+                duplicateUser, String.class);
 
         List<User> users = Lists.newArrayList(userRepository.findAll());
 
@@ -98,32 +99,25 @@ public class UserControllerIT {
 
     @Test
     public void login() {
-        User existingUser = new User();
-        existingUser.setUsername("test");
-        existingUser.setEncryptedPassword(passwordEncoder.encode("test"));
+        User existingUser = createUser();
+        existingUser.setEncryptedPassword(passwordEncoder.encode(existingUser.getPassword()));
         userRepository.save(existingUser);
 
-        User user = new User();
-        user.setUsername("test");
-        user.setPassword("test");
-
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/users/login",
-                user, String.class);
-
+        ResponseEntity<String> responseEntity = tryToLogin();
         assertThat(responseEntity.getStatusCode(), is(HttpStatus.OK));
         assertThat(responseEntity.getBody(), is(notNullValue()));
     }
 
     @Test
     public void http422IfLoginInvalid() {
-        User user = new User();
-        user.setUsername("test");
-        user.setPassword("test");
-
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity("/users/login",
-                user, String.class);
+        ResponseEntity<String> responseEntity = tryToLogin();
         String requiredMessage = "username or password is incorrect";
         assertThat(responseEntity.getStatusCode(), is(HttpStatus.UNPROCESSABLE_ENTITY));
         assertThat(responseEntity.getBody(), is(requiredMessage));
+    }
+
+    private ResponseEntity<String> tryToLogin() {
+        User user = createUser();
+        return restTemplate.postForEntity("/users/login", user, String.class);
     }
 }

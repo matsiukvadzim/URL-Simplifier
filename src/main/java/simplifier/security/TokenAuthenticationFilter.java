@@ -25,14 +25,6 @@ public class TokenAuthenticationFilter extends GenericFilterBean {
         this.tokenHelper = tokenHelper;
     }
 
-    private String getToken(HttpServletRequest request) {
-        String authHeader = request.getHeader(AUTH_HEADER);
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
-        }
-        return null;
-    }
-
     @Override
     public void doFilter(ServletRequest request,
                          ServletResponse response,
@@ -43,5 +35,13 @@ public class TokenAuthenticationFilter extends GenericFilterBean {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         chain.doFilter(request, response);
+    }
+
+    private String getToken(HttpServletRequest request) {
+        String authHeader = request.getHeader(AUTH_HEADER);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        return null;
     }
 }

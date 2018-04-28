@@ -48,6 +48,10 @@ public class LinkControllerIT {
 
     private BCryptPasswordEncoder passwordEncoder;
 
+    private static final String USERNAME = "author";
+
+    private static final String PASSWORD = "password";
+
     @Autowired
     public void setLinkRepository(LinkRepository linkRepository) {
         this.linkRepository = linkRepository;
@@ -91,16 +95,16 @@ public class LinkControllerIT {
 
     private User createUser() {
         User user = new User();
-        user.setUsername("author");
-        user.setEncryptedPassword(passwordEncoder.encode("password"));
+        user.setUsername(USERNAME);
+        user.setEncryptedPassword(passwordEncoder.encode(PASSWORD));
         userRepository.save(user);
         return user;
     }
 
-    private HttpHeaders getHeadersWithToken() {
+    private HttpHeaders getHeaders() {
         User user = new User();
-        user.setUsername("author");
-        user.setPassword("password");
+        user.setUsername(USERNAME);
+        user.setPassword(PASSWORD);
         ResponseEntity<String> responseEntity = restTemplate.postForEntity("/users/login",
                 user, String.class);
         String token = responseEntity.getBody();
@@ -112,12 +116,11 @@ public class LinkControllerIT {
     @Test
     public void createWithGeneratedShortened() throws IOException {
         createUser();
-        HttpHeaders headers = getHeadersWithToken();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithoutShortened.JSON"),
                 LinkCreationDto.class);
 
-        HttpEntity <LinkCreationDto> entity = new HttpEntity<>(link, headers);
+        HttpEntity <LinkCreationDto> entity = new HttpEntity<>(link, getHeaders());
 
         ResponseEntity<LinkGetterDto> responseEntity = restTemplate.exchange("/links", HttpMethod.POST,
                 entity, LinkGetterDto.class);
@@ -134,12 +137,11 @@ public class LinkControllerIT {
     @Test
     public void createWithExistShortened() throws IOException {
         createUser();
-        HttpHeaders headers = getHeadersWithToken();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
                 LinkCreationDto.class);
 
-        HttpEntity <LinkCreationDto> entity = new HttpEntity<>(link, headers);
+        HttpEntity <LinkCreationDto> entity = new HttpEntity<>(link, getHeaders());
 
         ResponseEntity<LinkGetterDto> responseEntity = restTemplate.exchange("/links", HttpMethod.POST,
                 entity, LinkGetterDto.class);
@@ -158,11 +160,11 @@ public class LinkControllerIT {
     @Test
     public void conflictIfUserNotExist() throws IOException {
         createUser();
-        HttpHeaders headers = getHeadersWithToken();
+
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/LinkWithEmptyUser.JSON"),
                 LinkCreationDto.class);
 
-        HttpEntity <LinkCreationDto> entity = new HttpEntity<>(link, headers);
+        HttpEntity <LinkCreationDto> entity = new HttpEntity<>(link, getHeaders());
 
         ResponseEntity<String> responseEntity = restTemplate.exchange("/links", HttpMethod.POST,
                 entity, String.class);
@@ -176,12 +178,11 @@ public class LinkControllerIT {
     @Test
     public void conflictIfShortenedNotUnique() throws Exception {
         createLink();
-        HttpHeaders headers = getHeadersWithToken();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/validLink.JSON"),
                 LinkCreationDto.class);
 
-        HttpEntity <LinkCreationDto> entity = new HttpEntity<>(link, headers);
+        HttpEntity <LinkCreationDto> entity = new HttpEntity<>(link, getHeaders());
 
         ResponseEntity<String> responseEntity = restTemplate.exchange("/links", HttpMethod.POST,
                 entity, String.class);
@@ -195,40 +196,32 @@ public class LinkControllerIT {
     @Test
     public void getLinksByTag() {
         Link link = createLink();
-        HttpHeaders headers = getHeadersWithToken();
-
-        HttpEntity entity = new HttpEntity(headers);
+        
+        HttpEntity entity = new HttpEntity(getHeaders());
 
         ResponseEntity<LinkGetterDto[]> responseEntity = restTemplate.exchange("/links/tags/1",
                 HttpMethod.GET, entity, LinkGetterDto[].class);
-
-        assertThat(responseEntity.getBody(), is(notNullValue()));
-        LinkGetterDto[] response = responseEntity.getBody();
-        assertThat(response.length, is(1));
-        LinkGetterDto responseLink = response[0];
+        LinkGetterDto responseLink = getResponseLink(responseEntity);
         checkAreLinksTheSame(responseLink, link);
     }
 
     @Test
     public void getLinksByUser() {
         Link link = createLink();
-        HttpHeaders headers = getHeadersWithToken();
 
-        HttpEntity entity = new HttpEntity(headers);
+        HttpEntity entity = new HttpEntity(getHeaders());
 
         ResponseEntity<LinkGetterDto[]> responseEntity = restTemplate.exchange("/links/users/author",
                 HttpMethod.GET, entity, LinkGetterDto[].class);
 
-        assertThat(responseEntity.getBody(), is(notNullValue()));
-        LinkGetterDto[] response = responseEntity.getBody();
-        assertThat(response.length, is(1));
-        LinkGetterDto responseLink = response[0];
+        LinkGetterDto responseLink = getResponseLink(responseEntity);
         checkAreLinksTheSame(responseLink, link);
     }
 
     @Test
     public void redirect() {
         createLink();
+
         ResponseEntity<String> response = restTemplate.getForEntity("/short", String.class);
         String requiredMessage = "link";
         assertThat(response.getStatusCode(), is(HttpStatus.OK));
@@ -244,9 +237,8 @@ public class LinkControllerIT {
     @Test
     public void getLinkByShortened() {
         Link link = createLink();
-        HttpHeaders headers = getHeadersWithToken();
 
-        HttpEntity entity = new HttpEntity(headers);
+        HttpEntity entity = new HttpEntity(getHeaders());
 
         ResponseEntity<LinkGetterDto> responseEntity = restTemplate.exchange("/links/short",
                 HttpMethod.GET, entity, LinkGetterDto.class);
@@ -258,12 +250,11 @@ public class LinkControllerIT {
     @Test
     public void updateLink() throws IOException {
         createLink();
-        HttpHeaders headers = getHeadersWithToken();
 
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/UpdateLink.JSON"),
                 LinkCreationDto.class);
 
-        HttpEntity<LinkCreationDto> entity = new HttpEntity<>(link, headers);
+        HttpEntity<LinkCreationDto> entity = new HttpEntity<>(link, getHeaders());
         restTemplate.exchange("/links/short", HttpMethod.PUT, entity, LinkGetterDto.class);
         assertThat(linkRepository.findByShortenedLink("short"), is(Optional.empty()));
         Link updatedLink = linkRepository.findByShortenedLink(link.getShortenedLink()).get();
@@ -275,10 +266,10 @@ public class LinkControllerIT {
     @Test
     public void NotFoundIfShortenedNotExistWhileUpdatingLink() throws IOException {
         createUser();
-        HttpHeaders headers = getHeadersWithToken();
+
         LinkCreationDto link = mapper.readValue(new File("src/test/resources/UpdateLink.JSON"),
                 LinkCreationDto.class);
-        HttpEntity<LinkCreationDto> entity = new HttpEntity<>(link, headers);
+        HttpEntity<LinkCreationDto> entity = new HttpEntity<>(link, getHeaders());
         ResponseEntity<String> response = restTemplate.exchange("/links/non-existing shortened", HttpMethod.PUT,
                 entity,String.class);
         assertThat(response.getStatusCode(), is(HttpStatus.NOT_FOUND));
@@ -294,6 +285,13 @@ public class LinkControllerIT {
                 .map(Tag::getName)
                 .collect(Collectors.toList());
         assertThat(responseLink.getTags(), is(tags));
+    }
+
+    private LinkGetterDto getResponseLink(ResponseEntity <LinkGetterDto[]> responseEntity) {
+        assertThat(responseEntity.getBody(), is(notNullValue()));
+        LinkGetterDto[] response = responseEntity.getBody();
+        assertThat(response.length, is(1));
+        return response[0];
     }
 }
 
