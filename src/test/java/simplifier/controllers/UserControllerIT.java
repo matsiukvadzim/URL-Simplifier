@@ -54,7 +54,7 @@ public class UserControllerIT {
     }
 
     @Test
-    public void registerUser() {
+    public void registerUserWithOkStatus() {
         User user = createUser();
 
         ResponseEntity<User> responseEntity = restTemplate.postForEntity("/users/sign-up",
@@ -75,7 +75,7 @@ public class UserControllerIT {
     }
 
     @Test
-    public void conflictIfUsernameNotUnique() {
+    public void shouldReturn409DuringUserRegistrationIfUsernameNotUnique() {
         User existingUser = createUser();
 
         User savedUser = userRepository.save(existingUser);
@@ -98,25 +98,25 @@ public class UserControllerIT {
     }
 
     @Test
-    public void login() {
+    public void  shouldLoginWithOkStatusAndReturnToken() {
         User existingUser = createUser();
         existingUser.setEncryptedPassword(passwordEncoder.encode(existingUser.getPassword()));
         userRepository.save(existingUser);
 
-        ResponseEntity<String> responseEntity = tryToLogin();
+        ResponseEntity<String> responseEntity = tryToLoginAndReturnTOken();
         assertThat(responseEntity.getStatusCode(), is(HttpStatus.OK));
         assertThat(responseEntity.getBody(), is(notNullValue()));
     }
 
     @Test
-    public void http422IfLoginInvalid() {
-        ResponseEntity<String> responseEntity = tryToLogin();
+    public void shouldReturnHttp422IfLoginInvalid() {
+        ResponseEntity<String> responseEntity = tryToLoginAndReturnTOken();
         String requiredMessage = "username or password is incorrect";
         assertThat(responseEntity.getStatusCode(), is(HttpStatus.UNPROCESSABLE_ENTITY));
         assertThat(responseEntity.getBody(), is(requiredMessage));
     }
 
-    private ResponseEntity<String> tryToLogin() {
+    private ResponseEntity<String> tryToLoginAndReturnTOken() {
         User user = createUser();
         return restTemplate.postForEntity("/users/login", user, String.class);
     }
