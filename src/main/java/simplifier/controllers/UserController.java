@@ -21,10 +21,15 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
+    @PostMapping("/sign-up")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         return userService.saveUser(user)
                 .map(savedUser -> ResponseEntity.status(HttpStatus.CREATED).build())
                 .orElse(ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists"));
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestBody User user) {
+        return userService.login(user);
     }
 }
